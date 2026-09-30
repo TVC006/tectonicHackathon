@@ -1190,9 +1190,12 @@ function App() {
 
   const startAnalyze = function () {
     if (showQuietMode) return;
-    window.analyzeCustomerWithModel().then(setHypothesis).catch(function () {
-      setHypothesis(window.analyzeCustomer());
-    });
+    window
+      .analyzeCustomerWithModel()
+      .then(setHypothesis)
+      .catch(function () {
+        setHypothesis(window.analyzeCustomer());
+      });
     setStage("analyzing");
   };
 
