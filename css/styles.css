@@ -458,6 +458,15 @@ button:focus-visible {
   opacity: 0.55;
 }
 
+.insight-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 0 0 8px;
+}
+
 .insight-title {
   font-family: var(--display);
   font-size: clamp(24px, 3vw, 30px);
@@ -2378,63 +2387,158 @@ button:focus-visible {
   color: var(--blue-deep);
 }
 
-/* ── Engine rail ── */
-.engine-rail {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 4px 6px;
-  margin: 0 0 var(--space-4);
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--line);
-}
-
-.engine-rail-step {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+/* ── Engine stage (subtle product label) ── */
+.engine-stage {
   font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 0 0 var(--space-3);
+  opacity: 0.85;
+}
+
+.engine-decision {
+  margin: 0 0 var(--space-4);
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.engine-decision-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+
+.engine-decision-fork {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.engine-decision-path {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+
+.engine-decision-path.yes {
+  border-color: rgba(0, 61, 122, 0.22);
+  background: var(--blue-soft);
+  color: var(--blue-deep);
+}
+
+.engine-decision-path.quiet {
+  border-color: rgba(13, 138, 124, 0.22);
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+.selected-caps-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 var(--space-4);
+}
+
+.selected-cap-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.selected-cap-domain {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-muted);
 }
 
-.engine-rail-step.is-active {
+.selected-cap-name {
+  font-size: 12px;
+  font-weight: 700;
   color: var(--blue-deep);
+  letter-spacing: -0.01em;
 }
 
-.engine-rail-step.is-done {
-  color: var(--teal);
+.quiet-title {
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 560;
+  letter-spacing: -0.03em;
+  color: var(--blue-deep);
+  margin: 0 0 var(--space-3);
+  line-height: 1.1;
 }
 
-.engine-rail-mark {
-  display: inline-flex;
+.combo-model {
+  max-width: 560px;
+  margin: 0 auto var(--space-6);
+  text-align: center;
+}
+
+.combo-flow {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid currentColor;
-  font-size: 9px;
-  line-height: 1;
+  gap: 6px 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-deep);
+  letter-spacing: -0.01em;
 }
 
-.engine-rail-step.is-active .engine-rail-mark {
-  background: var(--blue-soft);
-  border-color: var(--blue);
+.combo-flow-arrow {
+  color: var(--ink-muted);
+  font-weight: 600;
 }
 
-.engine-rail-step.is-done .engine-rail-mark {
+.combo-result {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.scale-evidence-card.is-quiet {
+  border-color: rgba(13, 138, 124, 0.28);
   background: var(--teal-soft);
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  width: 100%;
+  max-width: 280px;
+}
+
+.scale-evidence-card.is-quiet:hover {
   border-color: var(--teal);
 }
 
-.engine-rail-arrow {
-  color: var(--ink-muted);
-  font-size: 10px;
-  font-weight: 600;
+.cap-library.is-compact .cap-chip:not(.is-selected) {
+  opacity: 0.45;
+}
+
+.cap-library.is-compact .cap-chip.is-selected {
+  opacity: 1;
+}
+
+/* ── Engine rail (legacy, unused) ── */
+.engine-rail {
+  display: none;
 }
 
 /* ── Capability library strip ── */

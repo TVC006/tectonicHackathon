@@ -33,46 +33,8 @@ function capabilityDomain(id) {
   return cap && cap.domain ? cap.domain : "";
 }
 
-/* ── Engine progress rail ── */
-function EngineRail({ activeStep, situationTitle }) {
-  const steps = [
-    { id: "signals", label: "Signals" },
-    { id: "situation", label: situationTitle || "Situation" },
-    { id: "capabilities", label: "Capabilities" },
-    { id: "experience", label: "Experience" },
-  ];
-  const order = ["signals", "situation", "capabilities", "experience"];
-  const activeIdx = order.indexOf(activeStep);
-
-  return e(
-    "div",
-    { className: "engine-rail", "aria-hidden": "true" },
-    steps.map(function (step, i) {
-      const done = activeIdx > i;
-      const active = activeIdx === i;
-      return e(
-        React.Fragment,
-        { key: step.id },
-        e(
-          "div",
-          {
-            className:
-              "engine-rail-step" +
-              (done ? " is-done" : "") +
-              (active ? " is-active" : ""),
-          },
-          e("span", { className: "engine-rail-mark" }, done ? "✓" : i + 1),
-          e("span", { className: "engine-rail-label" }, step.label)
-        ),
-        i < steps.length - 1 &&
-          e("div", { className: "engine-rail-arrow" }, "→")
-      );
-    })
-  );
-}
-
-/* ── Compact capability library ── */
-function CapabilityLibraryStrip({ selectedIds }) {
+/* ── Compact capability library (compiler only) ── */
+function CapabilityLibraryStrip({ selectedIds, compact }) {
   const selected = selectedIds || [];
   const library =
     (typeof window !== "undefined" &&
@@ -82,8 +44,8 @@ function CapabilityLibraryStrip({ selectedIds }) {
 
   return e(
     "div",
-    { className: "cap-library" },
-    e("div", { className: "cap-library-label" }, "Capability library"),
+    { className: "cap-library" + (compact ? " is-compact" : "") },
+    e("div", { className: "cap-library-label" }, "From the capability library"),
     e(
       "div",
       { className: "cap-library-grid" },
@@ -280,13 +242,7 @@ function SignalAnalysis({ signals, hypothesis }) {
   return e(
     "div",
     { className: "analysis-panel" },
-    e(EngineRail, { activeStep: "signals", situationTitle: title }),
     e("div", { className: "analysis-label" }, "Pattern detected"),
-    e(
-      "p",
-      { className: "analysis-sub" },
-      "Evidence is being combined into a situation hypothesis."
-    ),
     e(
       "div",
       { className: "signal-grid" },
@@ -303,12 +259,7 @@ function SignalAnalysis({ signals, hypothesis }) {
     e(
       "div",
       { className: "converge" },
-      e(
-        "div",
-        { className: "converge-meta" },
-        "4 signals → pattern → " + title
-      ),
-      e("div", { className: "converge-eyebrow" }, "Hypothesis"),
+      e("div", { className: "converge-eyebrow" }, "Situation"),
       e("h2", { className: "converge-title" }, title),
       e("div", { className: "converge-conf" }, conf + "% confidence")
     )
@@ -320,17 +271,8 @@ function SituationConfirmation({ hypothesis, onYes, onNo, onWhy }) {
   return e(
     "div",
     { className: "hypothesis-card" },
-    e(EngineRail, {
-      activeStep: "situation",
-      situationTitle: hypothesis.title,
-    }),
-    e("div", { className: "hypothesis-eyebrow" }, "Hypothesis — not certainty"),
+    e("div", { className: "hypothesis-eyebrow" }, "Hypothesis"),
     e("h3", { className: "hypothesis-question" }, hypothesis.question),
-    e(
-      "p",
-      { className: "hypothesis-body" },
-      "A pattern of signals suggests this. You remain the source of truth."
-    ),
     e(
       "ul",
       { className: "evidence-list" },
@@ -362,50 +304,9 @@ function CapabilityCompiler({ hypothesis }) {
   return e(
     "div",
     { className: "compiler-panel compiler-enter" },
-    e(EngineRail, { activeStep: "capabilities", situationTitle: title }),
-    e("div", { className: "compiler-eyebrow" }, "KBC SHIFT"),
-    e("div", { className: "compiler-confirmed" }, "Situation confirmed"),
-    e("h2", { className: "compiler-title" }, title),
-    e(
-      "p",
-      { className: "compiler-body" },
-      "Not a new product — selecting existing trusted capabilities."
-    ),
-    e(
-      "div",
-      { className: "shift-chain shift-chain-vertical", "aria-hidden": "true" },
-      [
-        ["4", "signals"],
-        ["1", "situation"],
-        ["4", "capabilities"],
-        ["1", "experience"],
-      ].map(function (pair, i, arr) {
-        return e(
-          React.Fragment,
-          { key: pair[1] },
-          e(
-            "div",
-            {
-              className:
-                "shift-chain-node" +
-                (pair[1] === "situation" || pair[1] === "experience"
-                  ? " is-emphasis"
-                  : ""),
-            },
-            e("span", { className: "shift-chain-num" }, pair[0]),
-            e("span", { className: "shift-chain-label" }, pair[1])
-          ),
-          i < arr.length - 1 &&
-            e("div", { className: "shift-chain-arrow" }, "↓")
-        );
-      })
-    ),
-    e(CapabilityLibraryStrip, { selectedIds: caps }),
-    e(
-      "div",
-      { className: "compiler-selecting" },
-      "Selected for " + title
-    ),
+    e("div", { className: "compiler-confirmed" }, title + " confirmed"),
+    e("h2", { className: "compiler-title" }, "Selecting capabilities"),
+    e(CapabilityLibraryStrip, { selectedIds: caps, compact: true }),
     e(
       "div",
       { className: "compiler-spine" },
@@ -431,7 +332,7 @@ function CapabilityCompiler({ hypothesis }) {
         })
       )
     ),
-    e("div", { className: "compiler-ready" }, "Temporary experience ready")
+    e("div", { className: "compiler-ready" }, "Ready")
   );
 }
 
@@ -440,62 +341,32 @@ function ExitNotice() {
   return e(
     "div",
     { className: "exit-panel modal-enter" },
-    e("h2", { className: "exit-title" }, "Temporary experience ended"),
-    e("p", { className: "exit-body" }, "Your regular banking experience is back."),
+    e("h2", { className: "exit-title" }, "Back to normal banking"),
     e(
       "p",
       { className: "exit-body soft" },
-      "Actions you completed stay completed."
+      "Completed actions stay completed."
     )
   );
 }
 
 /* ── Quiet Mode ── */
-function QuietMode({ onBack }) {
+function QuietMode({ onBack, reason }) {
   return e(
     "div",
     { className: "quiet-panel quiet-mode-enter" },
-    e("div", { className: "quiet-eyebrow" }, "Quiet Mode · Engine decision"),
-    e(
-      "p",
-      { className: "quiet-principle" },
-      "Knowing when not to act is part of situational banking."
-    ),
-    e(
-      "div",
-      { className: "quiet-branch", "aria-hidden": "true" },
-      e("div", { className: "quiet-branch-step" }, "Signals"),
-      e("div", { className: "quiet-branch-arrow" }, "↓"),
-      e("div", { className: "quiet-branch-step" }, "Situation"),
-      e("div", { className: "quiet-branch-arrow" }, "↓"),
-      e("div", { className: "quiet-branch-step" }, "Is action useful?"),
-      e(
-        "div",
-        { className: "quiet-branch-fork" },
-        e("div", { className: "quiet-branch-path" }, "Yes → Experience"),
-        e(
-          "div",
-          { className: "quiet-branch-path is-active" },
-          "No → Quiet Mode"
-        )
-      )
-    ),
+    e("div", { className: "quiet-eyebrow" }, "Quiet Mode"),
+    e("h2", { className: "quiet-title" }, "Nothing needed right now."),
     e(
       "p",
       { className: "quiet-body" },
-      "Not every signal needs an action. Some changes are noticed — and left alone."
-    ),
-    e(
-      "ul",
-      { className: "quiet-list" },
-      ["No notification", "No recommendation", "No intervention"].map(function (line) {
-        return e("li", { key: line }, line);
-      })
+      reason ||
+        "Some signals are changing, but there is no useful action right now."
     ),
     e(
       "button",
       { className: "ghost-btn", type: "button", onClick: onBack },
-      "Back to demo"
+      "Back to banking"
     )
   );
 }
@@ -582,7 +453,7 @@ function CashflowForecast({ data }) {
   return e(
     "article",
     { className: "m-card card-cash anim-cash" },
-    e("div", { className: "m-card-domain" }, "Cash"),
+    e("div", { className: "m-card-domain" }, "Banking"),
     e("div", { className: "m-card-kicker teal" }, "Cashflow"),
     e("h3", { className: "m-card-title" }, "Your moving budget"),
     e("div", { className: "cash-big" }, "€" + data.buffer.toLocaleString("en-US")),
@@ -731,7 +602,6 @@ function MovingMode({
       e(
       "header",
       { className: "moving-hero" },
-      e(EngineRail, { activeStep: "experience", situationTitle: "Moving" }),
       e("div", { className: "moving-eyebrow" }, "KBC SHIFT"),
       e("h1", { className: "moving-title" }, "Moving Mode"),
       e(
@@ -742,16 +612,8 @@ function MovingMode({
       e(
         "p",
         { className: "moving-subtitle" },
-        "Your move · " + data.daysToGo + " days to go"
+        data.daysToGo + " days to go"
       ),
-      e(
-        "p",
-        { className: "moving-caps-line" },
-        "4 existing capabilities prioritised for your move"
-      ),
-      e(CapabilityLibraryStrip, {
-        selectedIds: ["standing-orders", "cashflow", "home-setup", "moving-day"],
-      }),
       e(
         "div",
         { className: "before-now" },
@@ -769,7 +631,7 @@ function MovingMode({
           e(
             "span",
             { className: "before-now-text" },
-            "Banking reorganised around the current situation"
+            "Situation-aware experience"
           )
         )
       ),
@@ -787,25 +649,9 @@ function MovingMode({
         e("div", { className: "progress-label" }, tasksReady + " of 5 tasks ready")
       ),
       e(
-        "p",
-        { className: "moving-intro" },
-        "Same bank. Temporarily reorganised around your move."
-      ),
-      e("p", { className: "moving-confirmed" }, "You confirmed this situation."),
-      e(
-        "div",
-        { className: "why-now" },
-        e("div", { className: "why-now-label" }, "Why you're seeing this"),
-        e(
-          "p",
-          { className: "why-now-body" },
-          "Signals formed a pattern. You confirmed. Existing capabilities are temporarily prioritised."
-        ),
-        e(
-          "button",
-          { className: "text-action", type: "button", onClick: onViewSignals },
-          "View signals"
-        )
+        "button",
+        { className: "text-action", type: "button", onClick: onViewSignals },
+        "View signals"
       )
     ),
     e(
@@ -830,12 +676,6 @@ function MovingMode({
     e(
       "div",
       { className: "moving-foot" },
-      e("h3", null, "Why these actions?"),
-      e(
-        "p",
-        null,
-        "These already exist in KBC. SHIFT decides which ones matter right now."
-      ),
       e(
         "button",
         { className: "ghost-btn", type: "button", onClick: onExit },
@@ -846,44 +686,31 @@ function MovingMode({
 }
 
 /* ── First Job Mode (shortened second situation) ── */
-function FirstJobMode({ data, hypothesis, onExit, onBackToEmma, onViewSignals }) {
-  const caps =
-    (hypothesis && hypothesis.capabilities) ||
-    ["salary", "savings", "card-readiness", "recurring-expenses"];
-
+function FirstJobMode({ data, onExit, onBackToEmma, onViewSignals }) {
   const cards = [
     {
       id: "salary",
       domain: "Payments",
       title: "First salary received",
-      body: "€" + data.salary.toLocaleString("en-US") + " arrived on the " + data.payday + ".",
-      meta: "Organise income from day one",
+      body: "€" + data.salary.toLocaleString("en-US") + " on the " + data.payday + ".",
     },
     {
       id: "savings",
       domain: "Cash",
       title: "Start a savings habit",
-      body:
-        "€" +
-        data.savingsNow +
-        " saved toward a €" +
-        data.savingsGoal +
-        " buffer goal.",
-      meta: "Existing savings capability",
+      body: "€" + data.savingsNow + " toward a €" + data.savingsGoal + " goal.",
     },
     {
       id: "card-readiness",
       domain: "Cards",
       title: "Card readiness",
       body: "Daily card use is rising with your new routine.",
-      meta: "Existing cards capability",
     },
     {
       id: "recurring-expenses",
       domain: "Recurring",
       title: "New recurring costs",
       body: "€" + data.recurringTotal + " in new subscriptions this month.",
-      meta: "Existing recurring capability",
     },
   ];
 
@@ -893,20 +720,13 @@ function FirstJobMode({ data, hypothesis, onExit, onBackToEmma, onViewSignals })
     e(
       "header",
       { className: "moving-hero" },
-      e(EngineRail, { activeStep: "experience", situationTitle: "First job" }),
-      e("div", { className: "moving-eyebrow" }, "KBC SHIFT · Same engine"),
+      e("div", { className: "moving-eyebrow" }, "KBC SHIFT"),
       e("h1", { className: "moving-title" }, "First Job Mode"),
       e(
         "p",
         { className: "temp-badge temporary-badge-enter" },
         "Temporary · Until your first months settle"
       ),
-      e(
-        "p",
-        { className: "moving-caps-line" },
-        "4 existing capabilities prioritised for your first job"
-      ),
-      e(CapabilityLibraryStrip, { selectedIds: caps }),
       e(
         "div",
         { className: "before-now" },
@@ -921,17 +741,8 @@ function FirstJobMode({ data, hypothesis, onExit, onBackToEmma, onViewSignals })
           "div",
           { className: "before-now-item now" },
           e("span", { className: "before-now-label" }, "Now"),
-          e(
-            "span",
-            { className: "before-now-text" },
-            "Banking reorganised around the current situation"
-          )
+          e("span", { className: "before-now-text" }, "Situation-aware experience")
         )
-      ),
-      e(
-        "p",
-        { className: "moving-intro" },
-        "Same engine as Moving. Different signals. Different capabilities."
       ),
       e(
         "button",
@@ -953,20 +764,13 @@ function FirstJobMode({ data, hypothesis, onExit, onBackToEmma, onViewSignals })
           e("div", { className: "m-card-domain" }, card.domain),
           e("div", { className: "m-card-kicker teal" }, capabilityLabel(card.id)),
           e("h3", { className: "m-card-title" }, card.title),
-          e("p", { className: "m-card-body" }, card.body),
-          e("div", { className: "fj-meta" }, card.meta)
+          e("p", { className: "m-card-body" }, card.body)
         );
       })
     ),
     e(
       "div",
       { className: "moving-foot" },
-      e("h3", null, "Same library. Different selection."),
-      e(
-        "p",
-        null,
-        "These already exist in KBC. SHIFT decides which ones matter right now."
-      ),
       e(
         "div",
         { className: "fj-actions" },
@@ -1047,29 +851,48 @@ function AccountOverview({ customer, transactions, dimmed, exiting, onAnalyze })
       e(
         "article",
         { className: "insight-card" },
+        e("div", { className: "insight-eyebrow" }, "Situation signal"),
         e("h2", { className: "insight-title" }, "Something seems to be changing."),
         e(
           "p",
           { className: "insight-body" },
-          "We noticed a pattern across your recent activity — together, not alone."
+          "4 related signals detected."
         ),
         e(
           "button",
           { className: "primary-cta", type: "button", onClick: onAnalyze },
           "See what we noticed"
-        ),
-        e("p", { className: "insight-hint" }, "KBC detected this. You confirm.")
+        )
       )
   );
 }
 
-/* ── Persona Strip / Scale evidence ── */
-function PersonaStrip({ personas, activeCustomer, onSelectNoah, onSelectEmma }) {
+/* ── Engine story / scale ── */
+function EngineStory({ onShowQuiet }) {
   return e(
     "section",
     { className: "scale-section", id: "scale" },
-    e("p", { className: "scale-kicker" }, "Evidence from this demo"),
-    e("h2", { className: "scale-title" }, "One engine. Many situations."),
+    e("h2", { className: "scale-title" }, "One engine. Many experiences."),
+    e(
+      "div",
+      { className: "combo-model" },
+      e(
+        "div",
+        { className: "combo-flow", "aria-hidden": "true" },
+        e("span", null, "Signals"),
+        e("span", { className: "combo-flow-arrow" }, "→"),
+        e("span", null, "Situation"),
+        e("span", { className: "combo-flow-arrow" }, "→"),
+        e("span", null, "Capabilities"),
+        e("span", { className: "combo-flow-arrow" }, "→"),
+        e("span", null, "Experience")
+      ),
+      e(
+        "p",
+        { className: "combo-result" },
+        "2.3M customers · one capability library · different situations"
+      )
+    ),
     e(
       "div",
       { className: "scale-evidence" },
@@ -1081,10 +904,9 @@ function PersonaStrip({ personas, activeCustomer, onSelectNoah, onSelectEmma }) 
         e(
           "div",
           { className: "scale-evidence-body" },
-          "4 signals → Moving → 4 capabilities → Moving Mode"
+          "Standing orders · Cashflow · Home · Moving day"
         )
       ),
-      e("div", { className: "scale-evidence-plus" }, "+"),
       e(
         "div",
         { className: "scale-evidence-card" },
@@ -1093,115 +915,27 @@ function PersonaStrip({ personas, activeCustomer, onSelectNoah, onSelectEmma }) 
         e(
           "div",
           { className: "scale-evidence-body" },
-          "4 signals → First job → 4 capabilities → First Job Mode"
+          "Salary · Savings · Cards · Recurring"
         )
+      ),
+      e(
+        "button",
+        {
+          type: "button",
+          className: "scale-evidence-card is-quiet is-interactive",
+          onClick: onShowQuiet,
+        },
+        e("div", { className: "scale-evidence-label" }, "Outcome"),
+        e("div", { className: "scale-evidence-title" }, "Quiet"),
+        e("div", { className: "scale-evidence-body" }, "No useful action · stay quiet")
       )
-    ),
-    e(
-      "div",
-      { className: "scale-story", "aria-hidden": "true" },
-      [
-        "2.3M customers",
-        "1 situational engine",
-        "1 reusable capability library",
-        "Different combinations by context",
-      ].map(function (label, i, arr) {
-        return e(
-          React.Fragment,
-          { key: label },
-          e(
-            "div",
-            {
-              className:
-                "scale-story-item" +
-                (i === 0 || i === arr.length - 1 ? " is-emphasis" : ""),
-            },
-            label
-          ),
-          i < arr.length - 1 &&
-            e("div", { className: "scale-story-arrow" }, "↓")
-        );
-      })
-    ),
-    e(
-      "div",
-      { className: "scale-stats" },
-      e("span", null, "2.3M customers"),
-      e("span", { className: "scale-stats-dot", "aria-hidden": "true" }, "·"),
-      e("span", null, "One capability library"),
-      e("span", { className: "scale-stats-dot", "aria-hidden": "true" }, "·"),
-      e("span", null, "Different situations")
-    ),
-    e(CapabilityLibraryStrip, { selectedIds: [] }),
-    e(
-      "div",
-      { className: "arch-steps" },
-      [
-        ["Signals", "What changed?"],
-        ["Situation", "What might be happening?"],
-        ["Capabilities", "What can KBC already do?"],
-        ["Experience", "What matters now?"],
-      ].map(function (step, i, arr) {
-        return e(
-          React.Fragment,
-          { key: step[0] },
-          e(
-            "div",
-            { className: "arch-step" },
-            e("div", { className: "arch-step-title" }, step[0]),
-            e("div", { className: "arch-step-body" }, step[1])
-          ),
-          i < arr.length - 1 && e("div", { className: "arch-step-arrow" }, "↓")
-        );
-      })
-    ),
-    e(
-      "p",
-      { className: "persona-section-label" },
-      "Try the same engine on another customer · Noah runs the full short path"
-    ),
-    e(
-      "div",
-      { className: "persona-grid" },
-      personas.map(function (p) {
-        const interactive = p.id === "noah" || p.id === "emma";
-        const isActive =
-          (p.id === "emma" && activeCustomer === "emma") ||
-          (p.id === "noah" && activeCustomer === "noah");
-        return e(
-          interactive ? "button" : "div",
-          {
-            key: p.id,
-            type: interactive ? "button" : undefined,
-            className:
-              "persona-card" +
-              (interactive ? " is-interactive" : "") +
-              (isActive ? " active" : ""),
-            onClick: interactive
-              ? function () {
-                  if (p.id === "noah") onSelectNoah();
-                  else onSelectEmma();
-                }
-              : undefined,
-          },
-          e("div", { className: "persona-avatar" }, p.initial),
-          e("div", { className: "persona-name" }, p.name),
-          e("div", { className: "persona-mode" }, p.mode),
-          e("div", { className: "persona-hint" }, p.modules.join(" · "))
-        );
-      })
     ),
     e(
       "div",
       { className: "final-message" },
       e("div", { className: "final-kicker" }, "KBC SHIFT"),
       e("h2", null, "From personalized banking"),
-      e("h2", null, "to situational banking."),
-      e(
-        "p",
-        null,
-        "The right existing KBC capabilities for what is happening in a customer's life right now."
-      )
+      e("h2", null, "to situational banking.")
     )
   );
 }
@@ -1217,6 +951,7 @@ function App() {
   const [showTrustModal, setShowTrustModal] = useState(false);
   const [showSignalsModal, setShowSignalsModal] = useState(false);
   const [showQuietMode, setShowQuietMode] = useState(false);
+  const [quietReason, setQuietReason] = useState("");
   const [exiting, setExiting] = useState(false);
   const [exitNotice, setExitNotice] = useState(false);
   const [hypothesis, setHypothesis] = useState(null);
@@ -1236,6 +971,7 @@ function App() {
     setShowTrustModal(false);
     setShowSignalsModal(false);
     setShowQuietMode(false);
+    setQuietReason("");
     setExiting(false);
     setExitNotice(false);
     setHypothesis(null);
@@ -1248,6 +984,7 @@ function App() {
     setShowTrustModal(false);
     setShowSignalsModal(false);
     setShowQuietMode(false);
+    setQuietReason("");
     setExiting(false);
     setExitNotice(false);
     setHypothesis(null);
@@ -1261,6 +998,7 @@ function App() {
     setShowTrustModal(false);
     setShowSignalsModal(false);
     setShowQuietMode(false);
+    setQuietReason("");
     setExiting(false);
     setExitNotice(false);
     setRentReviewing(false);
@@ -1279,6 +1017,7 @@ function App() {
     if (showQuietMode) return;
     setCustomerId("noah");
     setShowQuietMode(false);
+    setQuietReason("");
     setShowTrustModal(false);
     setShowSignalsModal(false);
     setExitNotice(false);
@@ -1340,13 +1079,28 @@ function App() {
   };
 
   const confirmNo = function () {
-    if (customerId === "noah") {
-      backToEmma();
-      return;
-    }
+    setShowTrustModal(false);
+    setConfirmLocked(false);
     setStage("normal");
     setHypothesis(null);
-    setConfirmLocked(false);
+    setQuietReason(
+      customerId === "noah"
+        ? "Some signals are changing, but there is no useful action right now."
+        : "You did not confirm the hypothesis. The engine stays quiet."
+    );
+    setShowQuietMode(true);
+    if (customerId === "noah") {
+      setCustomerId("emma");
+    }
+  };
+
+  const openQuietOutcome = function () {
+    setShowTrustModal(false);
+    setShowSignalsModal(false);
+    setQuietReason(
+      "Some signals are changing, but there is no useful action right now."
+    );
+    setShowQuietMode(true);
   };
 
   const exitExperience = function () {
@@ -1405,7 +1159,6 @@ function App() {
         isFirstJob &&
         e(FirstJobMode, {
           data: data.firstJob,
-          hypothesis: hypothesis,
           onExit: exitExperience,
           onBackToEmma: backToEmma,
           onViewSignals: function () {
@@ -1414,8 +1167,12 @@ function App() {
         }),
       showQuietMode &&
         e(QuietMode, {
+          reason: quietReason,
           onBack: function () {
             setShowQuietMode(false);
+            setQuietReason("");
+            setCustomerId("emma");
+            setStage("normal");
           },
         }),
       exitNotice && e("div", { className: "overlay-dim" }),
@@ -1456,11 +1213,8 @@ function App() {
     !showQuietMode &&
       !exitNotice &&
       !isOverlay &&
-      e(PersonaStrip, {
-        personas: data.personas,
-        activeCustomer: customerId,
-        onSelectNoah: startNoah,
-        onSelectEmma: backToEmma,
+      e(EngineStory, {
+        onShowQuiet: openQuietOutcome,
       }),
     showTrustModal &&
       e(TrustModal, {
@@ -1481,21 +1235,7 @@ function App() {
       { className: "demo-bar", "aria-label": "Demo controls" },
       e("button", { type: "button", onClick: reset }, "Reset demo"),
       e("button", { type: "button", onClick: skipToMoving }, "Skip to Moving Mode"),
-      e(
-        "button",
-        {
-          type: "button",
-          onClick: function () {
-            setShowQuietMode(true);
-            setShowTrustModal(false);
-            setShowSignalsModal(false);
-            setStage("normal");
-            setCustomerId("emma");
-            setHypothesis(null);
-          },
-        },
-        "Show quiet mode"
-      )
+      e("button", { type: "button", onClick: startNoah }, "Explore Noah")
     )
   );
 }
