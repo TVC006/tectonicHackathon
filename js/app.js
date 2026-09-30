@@ -262,22 +262,46 @@ function CapabilityCompiler({ hypothesis }) {
       { className: "compiler-body" },
       "We're reorganising your banking around what matters now."
     ),
-    e("p", { className: "compiler-selecting" }, "Selecting relevant capabilities…"),
     e(
-      "ul",
-      { className: "compiler-list" },
-      caps.map(function (id, i) {
+      "div",
+      { className: "shift-chain", "aria-hidden": "true" },
+      [
+        ["4", "signals"],
+        ["1", "situation"],
+        ["4", "capabilities"],
+        ["1", "experience"],
+      ].map(function (pair, i, arr) {
         return e(
-          "li",
-          {
-            key: id,
-            className: "compiler-item",
-            style: { animationDelay: 0.85 + i * 0.2 + "s" },
-          },
-          e("span", { className: "evidence-check" }, "✓"),
-          capabilityLabel(id)
+          React.Fragment,
+          { key: pair[1] },
+          e(
+            "div",
+            { className: "shift-chain-node" },
+            e("span", { className: "shift-chain-num" }, pair[0]),
+            e("span", { className: "shift-chain-label" }, pair[1])
+          ),
+          i < arr.length - 1 && e("div", { className: "shift-chain-arrow" }, "↓")
         );
       })
+    ),
+    e("div", { className: "compiler-selecting" }, "Selected for this situation"),
+    e("div", { className: "compiler-spine" },
+      e(
+        "ul",
+        { className: "compiler-list" },
+        caps.map(function (id, i) {
+          return e(
+            "li",
+            {
+              key: id,
+              className: "compiler-item",
+              style: { animationDelay: 1.1 + i * 0.2 + "s" },
+            },
+            e("span", { className: "evidence-check" }, "✓"),
+            capabilityLabel(id)
+          );
+        })
+      )
     ),
     e("div", { className: "compiler-ready" }, "Your experience is ready")
   );
@@ -313,9 +337,14 @@ function QuietMode({ onBack }) {
     e(
       "ul",
       { className: "quiet-list" },
-      ["No notification.", "No recommendation.", "No intervention."].map(function (line) {
+      ["No notification", "No recommendation", "No intervention"].map(function (line) {
         return e("li", { key: line }, line);
       })
+    ),
+    e(
+      "p",
+      { className: "quiet-principle" },
+      "Relevance also means knowing when to stay out of the way."
     ),
     e(
       "button",
@@ -565,6 +594,28 @@ function MovingMode({
       ),
       e("p", { className: "moving-until" }, "Until your move is complete"),
       e(
+        "p",
+        { className: "moving-caps-line" },
+        "4 capabilities prioritised for your move"
+      ),
+      e(
+        "div",
+        { className: "before-now" },
+        e(
+          "div",
+          { className: "before-now-item" },
+          e("span", { className: "before-now-label" }, "Before"),
+          e("span", { className: "before-now-text" }, "Regular banking experience")
+        ),
+        e("div", { className: "before-now-arrow", "aria-hidden": "true" }, "→"),
+        e(
+          "div",
+          { className: "before-now-item now" },
+          e("span", { className: "before-now-label" }, "Now"),
+          e("span", { className: "before-now-text" }, "Temporarily adapted to your move")
+        )
+      ),
+      e(
         "div",
         { className: "progress-wrap" },
         e(
@@ -728,7 +779,29 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
     e(
       "p",
       { className: "scale-sub" },
-      "The same situation engine can assemble different KBC experiences from the same trusted capabilities."
+      "2.3M customers. One capability library. Different situations."
+    ),
+    e(
+      "div",
+      { className: "arch-steps" },
+      [
+        ["Signals", "What changed?"],
+        ["Situation", "What might be happening?"],
+        ["Capabilities", "What can KBC already do?"],
+        ["Experience", "What matters now?"],
+      ].map(function (step, i, arr) {
+        return e(
+          React.Fragment,
+          { key: step[0] },
+          e(
+            "div",
+            { className: "arch-step" },
+            e("div", { className: "arch-step-title" }, step[0]),
+            e("div", { className: "arch-step-body" }, step[1])
+          ),
+          i < arr.length - 1 && e("div", { className: "arch-step-arrow" }, "↓")
+        );
+      })
     ),
     e(
       "div",
@@ -873,7 +946,7 @@ function App() {
       const t = setTimeout(function () {
         setStage("moving");
         setConfirmLocked(false);
-      }, 1900);
+      }, 2100);
       return function () {
         clearTimeout(t);
       };
