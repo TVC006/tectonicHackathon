@@ -1,39 +1,62 @@
 # KBC SHIFT
 
-> From personalized banking to situational banking.
+**From personalized banking to situational banking.**
 
-Hackathon proof of concept for KBC: a **situational personalization engine** that detects meaningful life changes from customer signals, asks for confirmation, and temporarily reorganises existing banking capabilities around the current situation.
-
-Moving Mode (Emma) is the hero **example**. The product story is the **engine**.
+Hackathon proof of concept for KBC.
 
 ---
 
-## Concept
+## Description
+
+**Copy-paste ready for the submission form (“Give a description of your solution”):**
+
+KBC SHIFT is a situational personalization engine for banking. Instead of building one-off features or permanently personalized dashboards, SHIFT detects meaningful life changes from combinations of customer signals, proposes a situation hypothesis, and asks the customer to confirm. Only after confirmation does the engine select existing trusted KBC capabilities from a reusable library and temporarily reorganise the banking experience around what matters now.
+
+If action is not useful, the engine stays quiet — personalization does not mean constantly interrupting the customer.
+
+The hero demo follows Emma (Moving): rental deposit, IKEA, Brico and Cambio form a pattern → Moving at 91% confidence → customer confirms → Standing orders, Cashflow, Home setup and Moving day are selected → temporary Moving Mode with real actions (e.g. pause old rent). Noah (First job) and Quiet Mode show that the same engine can produce different outcomes — or no outcome — without building separate products for each life event.
+
+This scales to 2.3M+ customers through one engine, one capability library, and many situation combinations — not 2.3M custom experiences.
+
+---
+
+## In short
+
+| | |
+| --- | --- |
+| **Problem** | Banks often personalize with static segments or isolated features. Customers in a life change need the right capabilities *now*, across products. |
+| **Solution** | A reusable engine: signals → situation → confirmation → capability selection → temporary experience (or Quiet). |
+| **Hero example** | Emma → Moving Mode |
+| **Also shows** | Noah → First job · Quiet when no action is useful |
+| **Scale** | One engine · one capability library · many situations · different temporary experiences |
+
+---
+
+## How it works
 
 ```
 Signals
   → Situation hypothesis
   → Customer confirmation
   → Is action useful?
-       ├─ Yes → Capability selection → Temporary experience
+       ├─ Yes → Select capabilities → Temporary experience
        └─ No  → Quiet Mode
 ```
 
-- **Signals** form a pattern (not a single transaction).
-- **Hypothesis, not certainty** — the customer remains the source of truth.
-- **Capabilities** come from a reusable library across domains (payments, cash, home, services, cards, …).
-- **Experiences are temporary** — not a permanently personalised dashboard.
-- **Quiet** is a valid engine outcome: knowing when not to act.
+1. **Signals** — Several events together form a pattern (not one transaction alone).
+2. **Hypothesis** — KBC proposes a situation; the customer remains the source of truth.
+3. **Confirmation** — Nothing changes until the customer confirms.
+4. **Capabilities** — Existing banking building blocks are selected from a shared library (payments, cash, home, services, cards, …).
+5. **Temporary experience** — The bank is reorganised for this situation until it ends.
+6. **Quiet** — Knowing when *not* to act is part of the product.
 
-Scale idea for 2.3M+ customers:
-
-**One engine · One capability library · Many situations · Different temporary experiences**
+Moving is **one output** of the engine — not the product itself.
 
 ---
 
 ## Run
 
-Requires [Node.js](https://nodejs.org/) (no `npm install`).
+Needs [Node.js](https://nodejs.org/). No `npm install`.
 
 ```bash
 node server.js
@@ -41,37 +64,35 @@ node server.js
 
 Open [http://localhost:3000](http://localhost:3000).
 
-- Offline-friendly hero demo (local vendor React + deterministic data)
-- No env vars, backend, database, or API
+Works offline for the demo (local React vendor + local data). No env vars, backend, database or API.
 
 ---
 
-## 60–90 second jury demo
+## Jury demo (60–90 seconds)
 
-1. **Emma — normal banking**  
-   Rental deposit, IKEA, Brico, Cambio tagged as related signals.  
-   **Situation signal:** “Something seems to be changing.” → **See what we noticed**
+1. Emma’s account — signals on rental deposit, IKEA, Brico, Cambio  
+2. **See what we noticed** → Moving · 91%  
+3. **Are you moving?** → **Yes** (or **Not really** → Quiet)  
+4. Engine selects capabilities → **Moving Mode** (temporary)  
+5. **Pause payment** (and optionally update address)  
+6. Scroll to scale: Emma / Noah / Quiet — same engine, different outcomes  
 
-2. **Pattern → Moving · 91%**  
-   Four signals become a situation hypothesis.
+Optional: **Explore Noah** → his normal banking → **See what we noticed** → First Job Mode.
 
-3. **Confirm** — “Are you moving?”  
-   - **Yes** → capability selection from the library  
-   - **Not really** → **Quiet Mode** (engine stays quiet)
+Demo bar: **Reset demo** · **Skip to Moving Mode** · **Explore Noah** / **Back to Emma**
 
-4. **Moving Mode** (temporary)  
-   Existing capabilities selected: Standing orders · Cashflow · Home setup · Moving day  
-   - **Review standing order** → **Pause payment**  
-   - **Continue setup** → address updated  
-   - Exit → normal banking; completed actions remain
+---
 
-5. **Scale strip** (no second full demo required)  
-   - Emma → Moving  
-   - Noah → First job (supporting example)  
-   - Quiet → no useful action  
-   Optional: **Explore Noah** for a short First Job path
+## Challenge fit
 
-Demo controls (bottom-right): **Reset demo** · **Skip to Moving Mode** · **Explore Noah**
+| KBC challenge | What SHIFT demonstrates |
+| --- | --- |
+| Understand needs from signals | Multi-signal pattern → situation |
+| Situation, behaviour, intent | Moving, First job, Quiet |
+| Adapted personal experience | Temporary mode after confirmation |
+| Across products & services | Cross-domain capability selection |
+| Impact for 2.3M+ customers | One engine + reusable library |
+| New approach, not a loose feature | Engine-first PoC; Moving is an example |
 
 ---
 
@@ -79,49 +100,24 @@ Demo controls (bottom-right): **Reset demo** · **Skip to Moving Mode** · **Exp
 
 ```
 kbc-shift/
-├── index.html                 # Shell + script load order
-├── server.js                  # Static file server (port 3000)
-├── css/styles.css             # Design tokens + UI
-├── js/
-│   ├── app.js                 # React UI (createElement) + state machine
-│   └── lib/
-│       ├── demo-data.js       # Emma / Noah demo data
-│       ├── situation-engine.js# Situations + capability library + analyze*
-│       └── types.js           # Demo type notes
-└── vendor/                    # React 18 UMD bundles (local)
+├── index.html
+├── server.js              # Static server :3000
+├── css/styles.css
+├── js/app.js              # UI + demo state machine
+├── js/lib/
+│   ├── demo-data.js
+│   ├── situation-engine.js
+│   └── types.js
+└── vendor/                # React 18 UMD (local)
 ```
 
----
-
-## Stack
-
-| Layer        | Choice                                      |
-| ------------ | ------------------------------------------- |
-| UI           | React 18 (`createElement`, no JSX)          |
-| Styling      | Vanilla CSS                                 |
-| Logic        | Deterministic JS situation engine           |
-| Data         | Local demo data                             |
-| Server       | `node server.js`                            |
-
-**Out of scope for this PoC:** TypeScript, Tailwind, Framer Motion, npm runtime deps, backend, LLM, auth, real APIs.
-
----
-
-## What this answers (KBC challenge)
-
-| Challenge theme                         | How SHIFT shows it                                      |
-| --------------------------------------- | ------------------------------------------------------- |
-| Understand needs from signals           | Multi-signal pattern → situation hypothesis             |
-| Situation / behaviour / intent          | Moving, First job (+ Quiet when not useful)             |
-| Personalised, adapted experience        | Temporary mode after confirmation                       |
-| Across products / services              | Capabilities from different domains, one selection step |
-| Scale to millions of customers          | One engine + reusable library + recombination           |
-| PoC of a new approach, not a loose feature | Engine-first story; Moving is one output             |
+**Stack:** React 18 (`createElement`), vanilla CSS, deterministic JS engine, Node static server.  
+**Not in scope:** TypeScript, Tailwind, backend, LLM, auth, real banking APIs.
 
 ---
 
 ## Notes
 
-- Reset clears demo state (including paused rent / address).
-- Exit Moving Mode ends the temporary experience but keeps completed actions until Reset.
-- This is a **demo**, not production banking software.
+- **Reset** clears demo state (including paused rent / address).
+- **Exit Moving Mode** ends the temporary experience; completed actions stay until Reset.
+- This is a **hackathon demo**, not production banking software.
