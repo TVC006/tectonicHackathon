@@ -28,8 +28,49 @@ function capabilityLabel(id) {
   return cap ? cap.label : id;
 }
 
+function capabilityDomain(id) {
+  const cap =
+    (typeof window !== "undefined" &&
+      window.getCapability &&
+      window.getCapability(id)) ||
+    null;
+  return cap && cap.domain ? cap.domain : "";
+}
+
+/* ── Compact capability library (compiler only) ── */
+function CapabilityLibraryStrip({ selectedIds, compact }) {
+  const selected = selectedIds || [];
+  const library =
+    (typeof window !== "undefined" &&
+      window.listCapabilities &&
+      window.listCapabilities()) ||
+    [];
+
+  return e(
+    "div",
+    { className: "cap-library" + (compact ? " is-compact" : "") },
+    e("div", { className: "cap-library-label" }, "From the capability library"),
+    e(
+      "div",
+      { className: "cap-library-grid" },
+      library.map(function (cap) {
+        const isSelected = selected.indexOf(cap.id) !== -1;
+        return e(
+          "div",
+          {
+            key: cap.id,
+            className: "cap-chip" + (isSelected ? " is-selected" : ""),
+          },
+          e("span", { className: "cap-chip-domain" }, cap.domain),
+          e("span", { className: "cap-chip-label" }, cap.label),
+        );
+      }),
+    ),
+  );
+}
+
 /* ── Header ── */
-function BankingShell({ children, isMoving }) {
+function BankingShell({ children, isMoving, customerName }) {
   return e(
     "div",
     { className: "app-shell" + (isMoving ? " is-moving" : "") },
@@ -75,7 +116,13 @@ function BankingShell({ children, isMoving }) {
 }
 
 /* ── Trust Modal ── */
-function TrustModal({ onClose }) {
+function TrustModal({ onClose, hypothesis }) {
+  const signals =
+    hypothesis && hypothesis.situation === "firstJob"
+      ? ["First salary", "Subscriptions", "Card activity", "Savings"]
+      : ["Rental deposit", "IKEA", "Brico", "Cambio"];
+  const title = (hypothesis && hypothesis.title) || "Moving";
+
   return e(
     "div",
     { className: "modal-root", role: "dialog", "aria-modal": "true" },
@@ -99,7 +146,7 @@ function TrustModal({ onClose }) {
         { className: "modal-text" },
         "Nothing changes until you confirm it.",
       ),
-      e("div", { className: "modal-signals-label" }, "Signals used"),
+      e("div", { className: "signals-flow-arrow", "aria-hidden": "true" }, "↓"),
       e(
         "ul",
         { className: "modal-signals" },
@@ -117,8 +164,24 @@ function TrustModal({ onClose }) {
   );
 }
 
-/* ── Signals Modal (Why Moving Mode) ── */
+/* ── Signals Modal ── */
 function SignalsModal({ hypothesis, onClose }) {
+  const isFirstJob = hypothesis && hypothesis.situation === "firstJob";
+  const details = isFirstJob
+    ? [
+        ["First salary", "Income"],
+        ["Subscriptions", "Recurring"],
+        ["Card activity", "Cards"],
+        ["Savings transfer", "Savings"],
+      ]
+    : [
+        ["Rental deposit", "Housing"],
+        ["IKEA", "Home"],
+        ["Brico", "Home improvement"],
+        ["Cambio", "Mobility"],
+      ];
+  const modeTitle = (hypothesis && hypothesis.modeLabel) || "Moving Mode";
+
   return e(
     "div",
     { className: "modal-root", role: "dialog", "aria-modal": "true" },
@@ -126,7 +189,7 @@ function SignalsModal({ hypothesis, onClose }) {
     e(
       "div",
       { className: "modal-panel modal-enter" },
-      e("h2", { className: "modal-title" }, "Why Moving Mode?"),
+      e("h2", { className: "modal-title" }, "Why " + modeTitle + "?"),
       e(
         "p",
         { className: "modal-text" },
@@ -140,11 +203,7 @@ function SignalsModal({ hypothesis, onClose }) {
       e(
         "ul",
         { className: "signals-detail-list" },
-        [
-          ["Rental deposit", "Housing"],
-          ["Home-related purchases", "IKEA + Brico"],
-          ["Van rental", "Mobility"],
-        ].map(([title, detail]) =>
+        details.map(([title, detail]) =>
           e(
             "li",
             { key: title },
@@ -158,6 +217,12 @@ function SignalsModal({ hypothesis, onClose }) {
           ),
         ),
       ),
+      e(
+        "p",
+        { className: "signals-combine" },
+        "No single signal is enough. Together they form a pattern.",
+      ),
+      e("div", { className: "signals-flow-arrow", "aria-hidden": "true" }, "↓"),
       e(
         "div",
         { className: "signals-result" },
@@ -187,11 +252,9 @@ function SignalsModal({ hypothesis, onClose }) {
 /* ── Signal Analysis ── */
 function SignalAnalysis({ signals, hypothesis }) {
   const detectedSignals =
-    hypothesis && hypothesis.signals && hypothesis.signals.length
+    (hypothesis && hypothesis.signals && hypothesis.signals.length
       ? hypothesis.signals
-      : signals.map(function (signal) {
-          return signal.from;
-        });
+      : signals) || [];
   return e(
     "div",
     { className: "analysis-panel" },
@@ -259,9 +322,7 @@ function SituationConfirmation({ hypothesis, onYes, onNo, onWhy }) {
     e(
       "p",
       { className: "hypothesis-body" },
-      "We noticed a combination of recent activity that can sometimes point to " +
-        (hypothesis.title || "a changing situation").toLowerCase() +
-        ".",
+      "We noticed a combination of recent activity that can sometimes happen when someone moves.",
     ),
     e("h3", { className: "hypothesis-question" }, hypothesis.question),
     e(
@@ -385,11 +446,12 @@ function ExitNotice() {
 }
 
 /* ── Quiet Mode ── */
-function QuietMode({ onBack }) {
+function QuietMode({ onBack, reason }) {
   return e(
     "div",
     { className: "quiet-panel quiet-mode-enter" },
-    e("div", { className: "quiet-eyebrow" }, "No action needed"),
+    e("div", { className: "quiet-eyebrow" }, "Quiet Mode"),
+    e("h2", { className: "quiet-title" }, "Nothing needed right now."),
     e(
       "p",
       { className: "quiet-body" },
@@ -450,7 +512,8 @@ function RentWarning({
     return e(
       "article",
       { className: "m-card card-rent anim-rent" },
-      e("div", { className: "m-card-kicker" }, "Standing order"),
+      e("div", { className: "m-card-domain" }, "Payments"),
+      e("div", { className: "m-card-kicker" }, "Standing orders"),
       e("h3", { className: "m-card-title" }, "Pause this payment?"),
       e(
         "div",
@@ -524,7 +587,8 @@ function RentWarning({
 function CashflowForecast({ data }) {
   return e(
     "article",
-    { className: "m-card anim-cash" },
+    { className: "m-card card-cash anim-cash" },
+    e("div", { className: "m-card-domain" }, "Banking"),
     e("div", { className: "m-card-kicker teal" }, "Cashflow"),
     e("h3", { className: "m-card-title" }, "Your moving budget"),
     e(
@@ -580,8 +644,9 @@ function HomeSetup({ addressCompleted, onContinue }) {
 
   return e(
     "article",
-    { className: "m-card anim-home" },
-    e("div", { className: "m-card-kicker blue" }, "Home"),
+    { className: "m-card card-home anim-home" },
+    e("div", { className: "m-card-domain" }, "Home"),
+    e("div", { className: "m-card-kicker blue" }, "Home setup"),
     e("h3", { className: "m-card-title" }, "Your new home"),
     e(
       "ul",
@@ -622,6 +687,7 @@ function MovingDay({ moveDate }) {
       e(
         "div",
         null,
+        e("div", { className: "m-card-domain" }, "Services"),
         e("div", { className: "m-card-kicker teal" }, "Moving day"),
         e("h3", { className: "m-card-title" }, moveDate),
       ),
@@ -695,7 +761,6 @@ function MovingMode({
         { className: "moving-subtitle" },
         "Your move · " + data.daysToGo + " days to go",
       ),
-      e("p", { className: "moving-until" }, "Until your move is complete"),
       e(
         "p",
         { className: "moving-caps-line" },
@@ -791,7 +856,57 @@ function MovingMode({
     e(
       "div",
       { className: "moving-foot" },
-      e("h3", null, "Why these actions?"),
+      e(
+        "button",
+        { className: "ghost-btn", type: "button", onClick: onExit },
+        "Exit Moving Mode",
+      ),
+    ),
+  );
+}
+
+/* ── First Job Mode (shortened second situation) ── */
+function FirstJobMode({ data, onExit, onViewSignals }) {
+  const cards = [
+    {
+      id: "salary",
+      domain: "Payments",
+      title: "First salary received",
+      body:
+        "€" +
+        data.salary.toLocaleString("en-US") +
+        " on the " +
+        data.payday +
+        ".",
+    },
+    {
+      id: "savings",
+      domain: "Cash",
+      title: "Start a savings habit",
+      body: "€" + data.savingsNow + " toward a €" + data.savingsGoal + " goal.",
+    },
+    {
+      id: "card-readiness",
+      domain: "Cards",
+      title: "Card readiness",
+      body: "Daily card use is rising with your new routine.",
+    },
+    {
+      id: "recurring-expenses",
+      domain: "Recurring",
+      title: "New recurring costs",
+      body: "€" + data.recurringTotal + " in new subscriptions this month.",
+    },
+  ];
+
+  return e(
+    "div",
+    { className: "moving-shell first-job-shell" },
+    e(
+      "header",
+      { className: "moving-hero" },
+      e("div", { className: "moving-eyebrow" }, "KBC SHIFT"),
+      e("h1", { className: "moving-title" }, "First Job Mode"),
       e(
         "p",
         null,
@@ -898,12 +1013,11 @@ function AccountOverview({
   );
 }
 
-/* ── Persona Strip ── */
-function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
-  const noah = personas.find(function (p) {
-    return p.id === "noah";
+/* ── Engine story / scale ── */
+function EngineStory({ personas, activePreview, onSelect, onBack }) {
+  const noah = personas.find(function (persona) {
+    return persona.id === "noah";
   });
-
   return e(
     "section",
     { className: "scale-section", id: "scale" },
@@ -971,9 +1085,9 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
       noah &&
       e(
         "div",
-        { className: "persona-preview persona-preview-enter" },
-        e("div", { className: "persona-preview-kicker" }, "Demonstration"),
-        e("div", { className: "persona-preview-title" }, "First job"),
+        { className: "scale-evidence-card" },
+        e("div", { className: "scale-evidence-label" }, "Customer example"),
+        e("div", { className: "scale-evidence-title" }, "First Job"),
         e(
           "p",
           { className: "persona-preview-line" },
@@ -1025,7 +1139,8 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
 /* ── App ── */
 function App() {
   const data = window.KBC_DEMO;
-  const customer = data.customer;
+  const [customerId, setCustomerId] = useState("customer");
+  const [activePreview, setActivePreview] = useState(null);
   const [stage, setStage] = useState("normal");
   const [rentPaused, setRentPaused] = useState(false);
   const [rentReviewing, setRentReviewing] = useState(false);
@@ -1033,13 +1148,20 @@ function App() {
   const [showTrustModal, setShowTrustModal] = useState(false);
   const [showSignalsModal, setShowSignalsModal] = useState(false);
   const [showQuietMode, setShowQuietMode] = useState(false);
-  const [personaPreview, setPersonaPreview] = useState(null);
+  const [quietReason, setQuietReason] = useState("");
   const [exiting, setExiting] = useState(false);
   const [exitNotice, setExitNotice] = useState(false);
   const [hypothesis, setHypothesis] = useState(null);
   const [confirmLocked, setConfirmLocked] = useState(false);
 
+  const customer = customerId === "noah" ? data.noah : data.customer;
+  const isFirstJob = hypothesis && hypothesis.situation === "firstJob";
+  const analysisSignals =
+    customerId === "noah" ? data.noahAnalysisSignals : data.analysisSignals;
+
   const reset = useCallback(function () {
+    setCustomerId("customer");
+    setActivePreview(null);
     setStage("normal");
     setRentPaused(false);
     setRentReviewing(false);
@@ -1047,21 +1169,43 @@ function App() {
     setShowTrustModal(false);
     setShowSignalsModal(false);
     setShowQuietMode(false);
-    setPersonaPreview(null);
+    setQuietReason("");
     setExiting(false);
     setExitNotice(false);
     setHypothesis(null);
     setConfirmLocked(false);
   }, []);
 
+  const skipToMoving = useCallback(function () {
+    setHypothesis(window.analyzeCustomer());
+    setShowTrustModal(false);
+    setShowSignalsModal(false);
+    setShowQuietMode(false);
+    setExiting(false);
+    setExitNotice(false);
+    setRentReviewing(false);
+    setConfirmLocked(false);
+    setStage("moving");
+  }, []);
+
   const startAnalyze = function () {
     if (showQuietMode) return;
-    window
-      .analyzeCustomerWithModel()
-      .then(setHypothesis)
-      .catch(function () {
-        setHypothesis(window.analyzeCustomer());
-      });
+    window.analyzeCustomerWithModel().then(setHypothesis).catch(function () {
+      setHypothesis(window.analyzeCustomer());
+    });
+    setStage("analyzing");
+  };
+
+  const startNoah = function () {
+    if (showQuietMode) return;
+    setCustomerId("noah");
+    setShowQuietMode(false);
+    setQuietReason("");
+    setShowTrustModal(false);
+    setShowSignalsModal(false);
+    setExitNotice(false);
+    setConfirmLocked(false);
+    setHypothesis(window.analyzeNoah());
     setStage("analyzing");
   };
 
@@ -1097,6 +1241,10 @@ function App() {
       if (!exitNotice) return;
       const t = setTimeout(function () {
         setExitNotice(false);
+        if (customerId === "noah") {
+          setCustomerId("customer");
+          setHypothesis(null);
+        }
         setStage("normal");
       }, 1400);
       return function () {
@@ -1114,29 +1262,48 @@ function App() {
   };
 
   const confirmNo = function () {
+    setShowTrustModal(false);
+    setConfirmLocked(false);
     setStage("normal");
     setHypothesis(null);
-    setConfirmLocked(false);
+    setQuietReason(
+      customerId === "noah"
+        ? "Some signals are changing, but there is no useful action right now."
+        : "You did not confirm the hypothesis. The engine stays quiet.",
+    );
+    setShowQuietMode(true);
+    if (customerId === "noah") {
+      setCustomerId("customer");
+    }
   };
 
-  const exitMoving = function () {
+  const openQuietOutcome = function () {
+    setShowTrustModal(false);
+    setShowSignalsModal(false);
+    setQuietReason(
+      "Some signals are changing, but there is no useful action right now.",
+    );
+    setShowQuietMode(true);
+  };
+
+  const exitExperience = function () {
     setShowSignalsModal(false);
     setExitNotice(true);
   };
 
   const isOverlay =
     stage === "analyzing" || stage === "confirmation" || stage === "compiling";
-  const isMoving = stage === "moving";
+  const isExperience = stage === "moving";
   const hideMain = showQuietMode || exitNotice;
 
   return e(
     BankingShell,
-    { isMoving: isMoving },
+    { isMoving: isExperience, customerName: customer.name },
     e(
       "main",
       { className: "main" },
       !hideMain &&
-        !isMoving &&
+        !isExperience &&
         e(AccountOverview, {
           customer: customer,
           transactions: customer.transactions,
@@ -1145,7 +1312,8 @@ function App() {
           onAnalyze: startAnalyze,
         }),
       !hideMain &&
-        isMoving &&
+        isExperience &&
+        !isFirstJob &&
         e(MovingMode, {
           data: data.moving,
           rentPaused: rentPaused,
@@ -1164,15 +1332,29 @@ function App() {
           onContinue: function () {
             setAddressCompleted(true);
           },
-          onExit: exitMoving,
+          onExit: exitExperience,
+          onViewSignals: function () {
+            setShowSignalsModal(true);
+          },
+        }),
+      !hideMain &&
+        isExperience &&
+        isFirstJob &&
+        e(FirstJobMode, {
+          data: data.firstJob,
+          onExit: exitExperience,
           onViewSignals: function () {
             setShowSignalsModal(true);
           },
         }),
       showQuietMode &&
         e(QuietMode, {
+          reason: quietReason,
           onBack: function () {
             setShowQuietMode(false);
+            setQuietReason("");
+            setCustomerId("customer");
+            setStage("normal");
           },
         }),
       exitNotice && e("div", { className: "overlay-dim" }),
@@ -1183,7 +1365,7 @@ function App() {
           "div",
           { className: "overlay" },
           e(SignalAnalysis, {
-            signals: data.analysisSignals,
+            signals: analysisSignals,
             hypothesis: hypothesis,
           }),
         ),
@@ -1211,16 +1393,23 @@ function App() {
     ),
     !showQuietMode &&
       !exitNotice &&
-      e(PersonaStrip, {
+      !isOverlay &&
+      e(EngineStory, {
         personas: data.personas,
-        activePreview: personaPreview,
-        onSelect: setPersonaPreview,
+        activePreview: activePreview,
+        onSelect: function (id) {
+          setActivePreview(id);
+          if (id === "noah") startNoah();
+        },
         onBack: function () {
-          setPersonaPreview(null);
+          setActivePreview(null);
+          setCustomerId("customer");
+          setStage("normal");
         },
       }),
     showTrustModal &&
       e(TrustModal, {
+        hypothesis: hypothesis,
         onClose: function () {
           setShowTrustModal(false);
         },
@@ -1238,13 +1427,18 @@ function App() {
       e("button", { type: "button", onClick: reset }, "Reset demo"),
       e(
         "button",
+        { type: "button", onClick: skipToMoving },
+        "Skip to Moving Mode",
+      ),
+      e(
+        "button",
         {
           type: "button",
           onClick: function () {
             setShowQuietMode(true);
             setShowTrustModal(false);
             setShowSignalsModal(false);
-            setPersonaPreview(null);
+            setActivePreview(null);
             setStage("normal");
           },
         },

@@ -7,51 +7,61 @@ const CAPABILITIES = {
   "standing-orders": {
     id: "standing-orders",
     label: "Standing orders",
+    domain: "Payments",
     description: "Review recurring payments affected by your move.",
   },
   cashflow: {
     id: "cashflow",
     label: "Cashflow",
+    domain: "Cash",
     description: "See how known expenses affect your available buffer.",
   },
   "home-setup": {
     id: "home-setup",
     label: "Home setup",
+    domain: "Home",
     description: "Complete the practical banking tasks around your new home.",
   },
   "moving-day": {
     id: "moving-day",
     label: "Moving day",
+    domain: "Services",
     description: "Prepare the payments and expenses around moving day.",
   },
   salary: {
     id: "salary",
-    label: "First salary",
+    label: "Salary",
+    domain: "Payments",
     description: "Understand and organise your first salary.",
   },
   savings: {
     id: "savings",
     label: "Savings",
+    domain: "Cash",
     description: "Create room for your next financial goal.",
   },
   "card-readiness": {
     id: "card-readiness",
     label: "Card readiness",
-    description: "Make sure your cards are ready for travel.",
+    domain: "Cards",
+    description: "Make sure your cards are ready for everyday use.",
   },
   insurance: {
     id: "insurance",
     label: "Insurance",
+    domain: "Protection",
     description: "Review relevant insurance coverage.",
   },
   "foreign-spending": {
     id: "foreign-spending",
     label: "Foreign spending",
+    domain: "Travel",
     description: "Prepare for payments in another currency.",
   },
   "recurring-expenses": {
     id: "recurring-expenses",
     label: "Recurring expenses",
+    domain: "Recurring",
     description: "Review recurring costs as your situation changes.",
   },
 };
@@ -60,6 +70,7 @@ const SITUATIONS = {
   moving: {
     id: "moving",
     title: "Moving",
+    modeLabel: "Moving Mode",
     question: "Are you moving?",
     confidence: 0.91,
     signals: ["Rental deposit", "Home-related purchases", "Van rental"],
@@ -68,14 +79,21 @@ const SITUATIONS = {
   firstJob: {
     id: "firstJob",
     title: "First job",
+    modeLabel: "First Job Mode",
     question: "Have you recently started a new job?",
     confidence: 0.86,
-    signals: ["First salary", "New employer pattern"],
-    capabilities: ["salary", "savings", "cashflow"],
+    signals: [
+      "Salary income",
+      "New recurring expenses",
+      "Card activity",
+      "Savings behaviour",
+    ],
+    capabilities: ["salary", "savings", "card-readiness", "recurring-expenses"],
   },
   travel: {
     id: "travel",
     title: "Travel",
+    modeLabel: "Travel Mode",
     question: "Are you preparing for a trip?",
     confidence: 0.84,
     signals: ["Flight", "Hotel", "Foreign activity"],
@@ -84,6 +102,7 @@ const SITUATIONS = {
   newFamily: {
     id: "newFamily",
     title: "New family",
+    modeLabel: "Family Mode",
     question: "Has something changed in your family recently?",
     confidence: 0.82,
     signals: ["Household pattern", "Recurring care costs"],
@@ -101,6 +120,18 @@ const DEFAULT_SIGNAL_HINTS = [
   "van",
   "moving",
   "mobility",
+];
+
+const NOAH_SIGNAL_HINTS = [
+  "salary",
+  "first salary",
+  "employer",
+  "recurring",
+  "subscription",
+  "card",
+  "savings",
+  "first job",
+  "income",
 ];
 
 function normalizeSignals(signals) {
@@ -124,27 +155,40 @@ function resolveCapabilities(ids) {
     })
     .filter(Boolean);
 }
-
-function analyzeSituation(signals) {
-  var normalized = normalizeSignals(signals);
-  var joined = normalized.join(" ");
-
-  var looksLikeMoving = DEFAULT_SIGNAL_HINTS.some(function (hint) {
-    return joined.indexOf(hint) !== -1;
-  });
-
-  var situationKey = looksLikeMoving ? "moving" : "moving";
-  var situation = SITUATIONS[situationKey];
-
+function buildHypothesis(situation) {
   return {
     situation: situation.id,
     confidence: situation.confidence,
     title: situation.title,
+    modeLabel: situation.modeLabel,
     signals: situation.signals.slice(),
     question: situation.question,
     capabilities: situation.capabilities.slice(),
     capabilityDetails: resolveCapabilities(situation.capabilities),
   };
+}
+
+function analyzeSituation(signals) {
+  var normalized = normalizeSignals(signals);
+  var joined = normalized.join(" ");
+
+  var looksLikeFirstJob = NOAH_SIGNAL_HINTS.some(function (hint) {
+    return joined.indexOf(hint) !== -1;
+  });
+  var looksLikeMoving = DEFAULT_SIGNAL_HINTS.some(function (hint) {
+    return joined.indexOf(hint) !== -1;
+  });
+
+  var situationKey = "moving";
+  if (looksLikeFirstJob && !looksLikeMoving) {
+    situationKey = "firstJob";
+  } else if (looksLikeMoving) {
+    situationKey = "moving";
+  } else if (looksLikeFirstJob) {
+    situationKey = "firstJob";
+  }
+
+  return buildHypothesis(SITUATIONS[situationKey]);
 }
 
 function analyzeCustomer() {
@@ -180,6 +224,16 @@ function analyzeCustomerWithModel() {
     });
 }
 
+/** Shortened second path — same engine, First Job. */
+function analyzeNoah() {
+  var demo = typeof window !== "undefined" ? window.KBC_DEMO : null;
+  var signals =
+    (demo && demo.noahAnalysisSignals) ||
+    (demo && demo.noah && demo.noah.transactions) ||
+    NOAH_SIGNAL_HINTS;
+  return analyzeSituation(signals);
+}
+
 function getSituation(id) {
   return SITUATIONS[id] || null;
 }
@@ -188,14 +242,22 @@ function getCapability(id) {
   return CAPABILITIES[id] || null;
 }
 
+function listCapabilities() {
+  return Object.keys(CAPABILITIES).map(function (id) {
+    return CAPABILITIES[id];
+  });
+}
+
 if (typeof window !== "undefined") {
   window.CAPABILITIES = CAPABILITIES;
   window.SITUATIONS = SITUATIONS;
   window.analyzeSituation = analyzeSituation;
   window.analyzeCustomer = analyzeCustomer;
   window.analyzeCustomerWithModel = analyzeCustomerWithModel;
+  window.analyzeNoah = analyzeNoah;
   window.getSituation = getSituation;
   window.getCapability = getCapability;
+  window.listCapabilities = listCapabilities;
 }
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
@@ -204,7 +266,9 @@ if (typeof module !== "undefined" && module.exports) {
     analyzeSituation: analyzeSituation,
     analyzeCustomer: analyzeCustomer,
     analyzeCustomerWithModel: analyzeCustomerWithModel,
+    analyzeNoah: analyzeNoah,
     getSituation: getSituation,
     getCapability: getCapability,
+    listCapabilities: listCapabilities,
   };
 }
