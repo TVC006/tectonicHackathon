@@ -1,8 +1,8 @@
 window.KBC_DEMO = {
-  emma: {
-    name: "Emma",
+  customer: {
+    name: "Customer",
     balance: 3842.61,
-    greeting: "Good evening, Emma",
+    greeting: "Good evening",
     transactions: [
       {
         id: "1",
@@ -70,9 +70,9 @@ window.KBC_DEMO = {
   },
   personas: [
     {
-      id: "emma",
+      id: "customer",
       initial: "E",
-      name: "Emma",
+      name: "Customer",
       mode: "MOVING",
       modules: ["Standing orders", "Cashflow", "Home setup"],
     },

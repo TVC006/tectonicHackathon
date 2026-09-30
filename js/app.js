@@ -21,7 +21,9 @@ function formatBalance(n) {
 
 function capabilityLabel(id) {
   const cap =
-    (typeof window !== "undefined" && window.getCapability && window.getCapability(id)) ||
+    (typeof window !== "undefined" &&
+      window.getCapability &&
+      window.getCapability(id)) ||
     null;
   return cap ? cap.label : id;
 }
@@ -41,7 +43,7 @@ function BankingShell({ children, isMoving }) {
           "div",
           { className: "brand" },
           e("div", { className: "brand-mark" }, "KBC"),
-          e("span", { className: "brand-name" }, "KBC")
+          e("span", { className: "brand-name" }, "KBC"),
         ),
         e(
           "nav",
@@ -52,22 +54,23 @@ function BankingShell({ children, isMoving }) {
                 "span",
                 {
                   key: item,
-                  className: "nav-item" + (item === "Overview" ? " active" : ""),
+                  className:
+                    "nav-item" + (item === "Overview" ? " active" : ""),
                 },
-                item
-              )
-          )
+                item,
+              ),
+          ),
         ),
         e(
           "div",
           { className: "top-actions" },
           e("span", { className: "top-link" }, "Search"),
           e("span", { className: "top-link" }, "Help"),
-          e("span", { className: "avatar" }, "Emma")
-        )
-      )
+          e("span", { className: "avatar" }, "Customer"),
+        ),
+      ),
     ),
-    children
+    children,
   );
 }
 
@@ -84,33 +87,33 @@ function TrustModal({ onClose }) {
       e(
         "p",
         { className: "modal-text" },
-        "KBC noticed a combination of recent signals that can sometimes occur when someone is moving."
+        "KBC noticed a combination of recent signals that can sometimes occur when someone is moving.",
       ),
       e(
         "p",
         { className: "modal-text" },
-        "We don't assume that's what is happening."
+        "We don't assume that's what is happening.",
       ),
       e(
         "p",
         { className: "modal-text" },
-        "Nothing changes until you confirm it."
+        "Nothing changes until you confirm it.",
       ),
       e("div", { className: "modal-signals-label" }, "Signals used"),
       e(
         "ul",
         { className: "modal-signals" },
         ["Rental deposit", "IKEA", "Brico", "Van rental"].map((s) =>
-          e("li", { key: s }, s)
-        )
+          e("li", { key: s }, s),
+        ),
       ),
       e("p", { className: "modal-footer" }, "You stay in control."),
       e(
         "button",
         { className: "btn-yes", type: "button", onClick: onClose },
-        "Got it"
-      )
-    )
+        "Got it",
+      ),
+    ),
   );
 }
 
@@ -127,12 +130,12 @@ function SignalsModal({ hypothesis, onClose }) {
       e(
         "p",
         { className: "modal-text" },
-        "These were the signals behind the situation we detected."
+        "These were the signals behind the situation we detected.",
       ),
       e(
         "p",
         { className: "modal-text" },
-        "We detected a pattern that can sometimes happen when someone moves."
+        "We detected a pattern that can sometimes happen when someone moves.",
       ),
       e(
         "ul",
@@ -150,35 +153,45 @@ function SignalsModal({ hypothesis, onClose }) {
               "div",
               null,
               e("div", { className: "signals-detail-title" }, title),
-              e("div", { className: "signals-detail-sub" }, detail)
-            )
-          )
-        )
+              e("div", { className: "signals-detail-sub" }, detail),
+            ),
+          ),
+        ),
       ),
       e(
         "div",
         { className: "signals-result" },
         e("div", { className: "modal-signals-label" }, "Possible situation"),
-        e("div", { className: "signals-result-title" }, hypothesis?.title || "Moving"),
+        e(
+          "div",
+          { className: "signals-result-title" },
+          hypothesis?.title || "Moving",
+        ),
         e(
           "div",
           { className: "signals-result-conf" },
           Math.round((hypothesis?.confidence || 0.91) * 100) +
-            "% confidence before confirmation"
-        )
+            "% confidence before confirmation",
+        ),
       ),
       e("p", { className: "modal-footer" }, "You confirmed this situation."),
       e(
         "button",
         { className: "btn-yes", type: "button", onClick: onClose },
-        "Close"
-      )
-    )
+        "Close",
+      ),
+    ),
   );
 }
 
 /* ── Signal Analysis ── */
-function SignalAnalysis({ signals }) {
+function SignalAnalysis({ signals, hypothesis }) {
+  const detectedSignals =
+    hypothesis && hypothesis.signals && hypothesis.signals.length
+      ? hypothesis.signals
+      : signals.map(function (signal) {
+          return signal.from;
+        });
   return e(
     "div",
     { className: "analysis-panel" },
@@ -186,29 +199,50 @@ function SignalAnalysis({ signals }) {
     e(
       "p",
       { className: "analysis-sub" },
-      "KBC is looking at recent activity as a pattern, not as individual transactions."
+      "KBC is looking at recent activity as a pattern, not as individual transactions.",
     ),
     e(
       "div",
       { className: "signal-grid" },
-      signals.map((s) =>
+      detectedSignals.map((s, index) =>
         e(
           "div",
-          { className: "signal-row", key: s.id },
-          e("div", { className: "signal-from" }, s.from),
+          { className: "signal-row", key: String(s) + index },
+          e(
+            "div",
+            { className: "signal-from" },
+            typeof s === "string" ? s : s.from,
+          ),
           e("div", { className: "signal-arrow" }, "→"),
-          e("div", { className: "signal-to" }, s.to)
-        )
-      )
+          e(
+            "div",
+            { className: "signal-to" },
+            typeof s === "string" ? "group signal" : s.to,
+          ),
+        ),
+      ),
     ),
     e(
       "div",
       { className: "converge" },
-      e("div", { className: "converge-meta" }, "4 signals → one emerging pattern"),
+      e(
+        "div",
+        { className: "converge-meta" },
+        detectedSignals.length + " signals → one emerging pattern",
+      ),
       e("div", { className: "converge-eyebrow" }, "Possible life change"),
-      e("h2", { className: "converge-title" }, "Moving"),
-      e("div", { className: "converge-conf" }, "91% confidence")
-    )
+      e(
+        "h2",
+        { className: "converge-title" },
+        (hypothesis && hypothesis.title) || "Analysing",
+      ),
+      e(
+        "div",
+        { className: "converge-conf" },
+        Math.round(((hypothesis && hypothesis.confidence) || 0) * 100) +
+          "% confidence",
+      ),
+    ),
   );
 }
 
@@ -217,39 +251,56 @@ function SituationConfirmation({ hypothesis, onYes, onNo, onWhy }) {
   return e(
     "div",
     { className: "hypothesis-card" },
-    e("div", { className: "hypothesis-eyebrow" }, "Something seems to be changing"),
+    e(
+      "div",
+      { className: "hypothesis-eyebrow" },
+      "Something seems to be changing",
+    ),
     e(
       "p",
       { className: "hypothesis-body" },
-      "We noticed a combination of recent activity that can sometimes happen when someone moves."
+      "We noticed a combination of recent activity that can sometimes point to " +
+        (hypothesis.title || "a changing situation").toLowerCase() +
+        ".",
     ),
     e("h3", { className: "hypothesis-question" }, hypothesis.question),
     e(
       "ul",
       { className: "evidence-list" },
       hypothesis.signals.map((s) =>
-        e("li", { key: s }, e("span", { className: "evidence-check" }, "✓"), s)
-      )
+        e("li", { key: s }, e("span", { className: "evidence-check" }, "✓"), s),
+      ),
     ),
     e(
       "div",
       { className: "btn-stack" },
-      e("button", { className: "btn-yes", type: "button", onClick: onYes }, "Yes, that's right"),
-      e("button", { className: "btn-no", type: "button", onClick: onNo }, "Not really"),
+      e(
+        "button",
+        { className: "btn-yes", type: "button", onClick: onYes },
+        "Yes, that's right",
+      ),
+      e(
+        "button",
+        { className: "btn-no", type: "button", onClick: onNo },
+        "Not really",
+      ),
       e(
         "button",
         { className: "btn-why", type: "button", onClick: onWhy },
-        "Why am I seeing this?"
-      )
-    )
+        "Why am I seeing this?",
+      ),
+    ),
   );
 }
 
 /* ── Capability Compiler ── */
 function CapabilityCompiler({ hypothesis }) {
-  const caps =
-    (hypothesis && hypothesis.capabilities) ||
-    ["standing-orders", "cashflow", "home-setup", "moving-day"];
+  const caps = (hypothesis && hypothesis.capabilities) || [
+    "standing-orders",
+    "cashflow",
+    "home-setup",
+    "moving-day",
+  ];
 
   return e(
     "div",
@@ -260,7 +311,7 @@ function CapabilityCompiler({ hypothesis }) {
     e(
       "p",
       { className: "compiler-body" },
-      "We're reorganising your banking around what matters now."
+      "We're reorganising your banking around what matters now.",
     ),
     e(
       "div",
@@ -278,14 +329,21 @@ function CapabilityCompiler({ hypothesis }) {
             "div",
             { className: "shift-chain-node" },
             e("span", { className: "shift-chain-num" }, pair[0]),
-            e("span", { className: "shift-chain-label" }, pair[1])
+            e("span", { className: "shift-chain-label" }, pair[1]),
           ),
-          i < arr.length - 1 && e("div", { className: "shift-chain-arrow" }, "↓")
+          i < arr.length - 1 &&
+            e("div", { className: "shift-chain-arrow" }, "↓"),
         );
-      })
+      }),
     ),
-    e("div", { className: "compiler-selecting" }, "Selected for this situation"),
-    e("div", { className: "compiler-spine" },
+    e(
+      "div",
+      { className: "compiler-selecting" },
+      "Selected for this situation",
+    ),
+    e(
+      "div",
+      { className: "compiler-spine" },
       e(
         "ul",
         { className: "compiler-list" },
@@ -298,12 +356,12 @@ function CapabilityCompiler({ hypothesis }) {
               style: { animationDelay: 1.1 + i * 0.2 + "s" },
             },
             e("span", { className: "evidence-check" }, "✓"),
-            capabilityLabel(id)
+            capabilityLabel(id),
           );
-        })
-      )
+        }),
+      ),
     ),
-    e("div", { className: "compiler-ready" }, "Your experience is ready")
+    e("div", { className: "compiler-ready" }, "Your experience is ready"),
   );
 }
 
@@ -313,8 +371,16 @@ function ExitNotice() {
     "div",
     { className: "exit-panel modal-enter" },
     e("h2", { className: "exit-title" }, "Moving Mode ended"),
-    e("p", { className: "exit-body" }, "Your regular banking experience is back."),
-    e("p", { className: "exit-body soft" }, "Your completed actions remain completed.")
+    e(
+      "p",
+      { className: "exit-body" },
+      "Your regular banking experience is back.",
+    ),
+    e(
+      "p",
+      { className: "exit-body soft" },
+      "Your completed actions remain completed.",
+    ),
   );
 }
 
@@ -327,35 +393,41 @@ function QuietMode({ onBack }) {
     e(
       "p",
       { className: "quiet-body" },
-      "We noticed some changes in your recent activity, but there isn't enough evidence of a meaningful situation."
+      "We noticed some changes in your recent activity, but there isn't enough evidence of a meaningful situation.",
     ),
-    e(
-      "p",
-      { className: "quiet-body" },
-      "So KBC won't interrupt you."
-    ),
+    e("p", { className: "quiet-body" }, "So KBC won't interrupt you."),
     e(
       "ul",
       { className: "quiet-list" },
-      ["No notification", "No recommendation", "No intervention"].map(function (line) {
-        return e("li", { key: line }, line);
-      })
+      ["No notification", "No recommendation", "No intervention"].map(
+        function (line) {
+          return e("li", { key: line }, line);
+        },
+      ),
     ),
     e(
       "p",
       { className: "quiet-principle" },
-      "Relevance also means knowing when to stay out of the way."
+      "Relevance also means knowing when to stay out of the way.",
     ),
     e(
       "button",
       { className: "ghost-btn", type: "button", onClick: onBack },
-      "Back to demo"
-    )
+      "Back to demo",
+    ),
   );
 }
 
 /* ── Rent Warning ── */
-function RentWarning({ rent, rentDate, rentPaused, rentReviewing, onReview, onPause, onKeep }) {
+function RentWarning({
+  rent,
+  rentDate,
+  rentPaused,
+  rentReviewing,
+  onReview,
+  onPause,
+  onKeep,
+}) {
   if (rentPaused) {
     return e(
       "article",
@@ -369,8 +441,8 @@ function RentWarning({ rent, rentDate, rentPaused, rentReviewing, onReview, onPa
           rent +
           " payment scheduled for " +
           rentDate +
-          " will no longer be sent automatically."
-      )
+          " will no longer be sent automatically.",
+      ),
     );
   }
 
@@ -384,8 +456,18 @@ function RentWarning({ rent, rentDate, rentPaused, rentReviewing, onReview, onPa
         "div",
         { className: "rent-meta" },
         e("div", null, e("span", null, "Date"), e("strong", null, rentDate)),
-        e("div", null, e("span", null, "Amount"), e("strong", null, "€" + rent)),
-        e("div", null, e("span", null, "Type"), e("strong", null, "Old rental payment"))
+        e(
+          "div",
+          null,
+          e("span", null, "Amount"),
+          e("strong", null, "€" + rent),
+        ),
+        e(
+          "div",
+          null,
+          e("span", null, "Type"),
+          e("strong", null, "Old rental payment"),
+        ),
       ),
       e(
         "div",
@@ -393,14 +475,14 @@ function RentWarning({ rent, rentDate, rentPaused, rentReviewing, onReview, onPa
         e(
           "button",
           { className: "card-btn", type: "button", onClick: onPause },
-          "Pause payment"
+          "Pause payment",
         ),
         e(
           "button",
           { className: "text-action", type: "button", onClick: onKeep },
-          "Keep scheduled"
-        )
-      )
+          "Keep scheduled",
+        ),
+      ),
     );
   }
 
@@ -408,24 +490,33 @@ function RentWarning({ rent, rentDate, rentPaused, rentReviewing, onReview, onPa
     "article",
     { className: "m-card card-rent anim-rent" },
     e("div", { className: "m-card-kicker warn" }, "Needs attention"),
-    e("h3", { className: "m-card-title" }, "€" + rent + " rent payment needs attention"),
+    e(
+      "h3",
+      { className: "m-card-title" },
+      "€" + rent + " rent payment needs attention",
+    ),
     e(
       "p",
       { className: "m-card-body" },
-      "Your old monthly rent is still scheduled for " + rentDate + "."
+      "Your old monthly rent is still scheduled for " + rentDate + ".",
     ),
     e(
       "div",
       { className: "rent-meta" },
       e("div", null, e("span", null, "Date"), e("strong", null, rentDate)),
       e("div", null, e("span", null, "Amount"), e("strong", null, "€" + rent)),
-      e("div", null, e("span", null, "Type"), e("strong", null, "Automatic payment"))
+      e(
+        "div",
+        null,
+        e("span", null, "Type"),
+        e("strong", null, "Automatic payment"),
+      ),
     ),
     e(
       "button",
       { className: "card-btn", type: "button", onClick: onReview },
-      "Review standing order"
-    )
+      "Review standing order",
+    ),
   );
 }
 
@@ -436,11 +527,15 @@ function CashflowForecast({ data }) {
     { className: "m-card anim-cash" },
     e("div", { className: "m-card-kicker teal" }, "Cashflow"),
     e("h3", { className: "m-card-title" }, "Your moving budget"),
-    e("div", { className: "cash-big" }, "€" + data.buffer.toLocaleString("en-US")),
+    e(
+      "div",
+      { className: "cash-big" },
+      "€" + data.buffer.toLocaleString("en-US"),
+    ),
     e(
       "div",
       { className: "cash-label" },
-      "Expected buffer after known moving expenses"
+      "Expected buffer after known moving expenses",
     ),
     e(
       "div",
@@ -448,7 +543,11 @@ function CashflowForecast({ data }) {
       [
         ["Today", "€" + data.balanceToday.toLocaleString("en-US"), null],
         ["Deposit", "−€" + data.deposit.toLocaleString("en-US"), "neg"],
-        ["Home purchases", "−€" + data.homePurchases.toLocaleString("en-US"), "neg"],
+        [
+          "Home purchases",
+          "−€" + data.homePurchases.toLocaleString("en-US"),
+          "neg",
+        ],
         ["Expected buffer", "€" + data.buffer.toLocaleString("en-US"), "pos"],
       ].map(function ([label, val, tone], i, arr) {
         return e(
@@ -458,12 +557,12 @@ function CashflowForecast({ data }) {
             "div",
             { className: "cash-step" },
             e("span", { className: "cash-step-label" }, label),
-            e("span", { className: "cash-step-val " + (tone || "") }, val)
+            e("span", { className: "cash-step-val " + (tone || "") }, val),
           ),
-          i < arr.length - 1 && e("div", { className: "cash-step-arrow" }, "↓")
+          i < arr.length - 1 && e("div", { className: "cash-step-arrow" }, "↓"),
         );
-      })
-    )
+      }),
+    ),
   );
 }
 
@@ -495,9 +594,9 @@ function HomeSetup({ addressCompleted, onContinue }) {
             className: "check-item " + (item.done ? "done" : "todo"),
           },
           e("span", { className: "check-mark" }, item.done ? "✓" : ""),
-          item.label
+          item.label,
         );
-      })
+      }),
     ),
     e(
       "button",
@@ -507,8 +606,8 @@ function HomeSetup({ addressCompleted, onContinue }) {
         onClick: onContinue,
         disabled: addressCompleted,
       },
-      addressCompleted ? "Next step" : "Continue setup"
-    )
+      addressCompleted ? "Next step" : "Continue setup",
+    ),
   );
 }
 
@@ -524,14 +623,14 @@ function MovingDay({ moveDate }) {
         "div",
         null,
         e("div", { className: "m-card-kicker teal" }, "Moving day"),
-        e("h3", { className: "m-card-title" }, moveDate)
+        e("h3", { className: "m-card-title" }, moveDate),
       ),
-      e("div", { className: "cal-icon", "aria-hidden": "true" }, "12")
+      e("div", { className: "cal-icon", "aria-hidden": "true" }, "12"),
     ),
     e(
       "p",
       { className: "m-card-body" },
-      "You've already booked your moving van. We've prepared the relevant things for the day."
+      "You've already booked your moving van. We've prepared the relevant things for the day.",
     ),
     e(
       "div",
@@ -540,21 +639,21 @@ function MovingDay({ moveDate }) {
         "div",
         { className: "day-item done" },
         e("span", { className: "check-mark" }, "✓"),
-        "Van"
+        "Van",
       ),
       e(
         "div",
         { className: "day-item done" },
         e("span", { className: "check-mark" }, "✓"),
-        "Card"
+        "Card",
       ),
       e(
         "div",
         { className: "day-item" },
         e("span", { className: "check-mark empty" }),
-        "Expected expenses"
-      )
-    )
+        "Expected expenses",
+      ),
+    ),
   );
 }
 
@@ -584,19 +683,23 @@ function MovingMode({
         "div",
         { className: "moving-eyebrow-row" },
         e("div", { className: "moving-eyebrow" }, "KBC SHIFT"),
-        e("span", { className: "temp-badge temporary-badge-enter" }, "Temporary")
+        e(
+          "span",
+          { className: "temp-badge temporary-badge-enter" },
+          "Temporary",
+        ),
       ),
       e("h1", { className: "moving-title" }, "Moving Mode"),
       e(
         "p",
         { className: "moving-subtitle" },
-        "Your move · " + data.daysToGo + " days to go"
+        "Your move · " + data.daysToGo + " days to go",
       ),
       e("p", { className: "moving-until" }, "Until your move is complete"),
       e(
         "p",
         { className: "moving-caps-line" },
-        "4 capabilities prioritised for your move"
+        "4 capabilities prioritised for your move",
       ),
       e(
         "div",
@@ -605,15 +708,23 @@ function MovingMode({
           "div",
           { className: "before-now-item" },
           e("span", { className: "before-now-label" }, "Before"),
-          e("span", { className: "before-now-text" }, "Regular banking experience")
+          e(
+            "span",
+            { className: "before-now-text" },
+            "Regular banking experience",
+          ),
         ),
         e("div", { className: "before-now-arrow", "aria-hidden": "true" }, "→"),
         e(
           "div",
           { className: "before-now-item now" },
           e("span", { className: "before-now-label" }, "Now"),
-          e("span", { className: "before-now-text" }, "Temporarily adapted to your move")
-        )
+          e(
+            "span",
+            { className: "before-now-text" },
+            "Temporarily adapted to your move",
+          ),
+        ),
       ),
       e(
         "div",
@@ -624,16 +735,24 @@ function MovingMode({
           e("div", {
             className: "progress-fill",
             style: { width: progress + "%" },
-          })
+          }),
         ),
-        e("div", { className: "progress-label" }, tasksReady + " of 5 tasks ready")
+        e(
+          "div",
+          { className: "progress-label" },
+          tasksReady + " of 5 tasks ready",
+        ),
       ),
       e(
         "p",
         { className: "moving-intro" },
-        "We've brought together the things that matter most for your move."
+        "We've brought together the things that matter most for your move.",
       ),
-      e("p", { className: "moving-confirmed" }, "You confirmed this situation."),
+      e(
+        "p",
+        { className: "moving-confirmed" },
+        "You confirmed this situation.",
+      ),
       e(
         "div",
         { className: "why-now" },
@@ -641,14 +760,14 @@ function MovingMode({
         e(
           "p",
           { className: "why-now-body" },
-          "Recent activity suggested your situation may have changed. You confirmed you're moving, so we've temporarily prioritised the things most relevant to your move."
+          "Recent activity suggested your situation may have changed. You confirmed you're moving, so we've temporarily prioritised the things most relevant to your move.",
         ),
         e(
           "button",
           { className: "text-action", type: "button", onClick: onViewSignals },
-          "View signals"
-        )
-      )
+          "View signals",
+        ),
+      ),
     ),
     e(
       "div",
@@ -667,7 +786,7 @@ function MovingMode({
         addressCompleted: addressCompleted,
         onContinue: onContinue,
       }),
-      e(MovingDay, { moveDate: data.moveDate })
+      e(MovingDay, { moveDate: data.moveDate }),
     ),
     e(
       "div",
@@ -676,19 +795,25 @@ function MovingMode({
       e(
         "p",
         null,
-        "KBC selected these capabilities because they are relevant to the situation you confirmed. You can leave Moving Mode at any time."
+        "KBC selected these capabilities because they are relevant to the situation you confirmed. You can leave Moving Mode at any time.",
       ),
       e(
         "button",
         { className: "ghost-btn", type: "button", onClick: onExit },
-        "Exit Moving Mode"
-      )
-    )
+        "Exit Moving Mode",
+      ),
+    ),
   );
 }
 
 /* ── Normal Dashboard ── */
-function AccountOverview({ customer, transactions, dimmed, exiting, onAnalyze }) {
+function AccountOverview({
+  customer,
+  transactions,
+  dimmed,
+  exiting,
+  onAnalyze,
+}) {
   return e(
     "div",
     {
@@ -703,15 +828,19 @@ function AccountOverview({ customer, transactions, dimmed, exiting, onAnalyze })
       "div",
       { className: "balance-card" },
       e("div", { className: "balance-label" }, "Current account"),
-      e("div", { className: "balance-amount" }, formatBalance(customer.balance)),
+      e(
+        "div",
+        { className: "balance-amount" },
+        formatBalance(customer.balance),
+      ),
       e("div", { className: "balance-meta" }, "Available balance"),
       e(
         "div",
         { className: "balance-actions" },
         e("button", { className: "ghost-btn", type: "button" }, "Transfer"),
         e("button", { className: "ghost-btn", type: "button" }, "Pay"),
-        e("button", { className: "ghost-btn", type: "button" }, "Manage")
-      )
+        e("button", { className: "ghost-btn", type: "button" }, "Manage"),
+      ),
     ),
     e("h2", { className: "section-title" }, "Your recent activity"),
     e(
@@ -731,37 +860,41 @@ function AccountOverview({ customer, transactions, dimmed, exiting, onAnalyze })
               "div",
               { className: "tx-merchant-line" },
               e("span", { className: "tx-merchant" }, tx.merchant),
-              tx.signal && e("span", { className: "tx-tag" }, tx.signal)
+              tx.signal && e("span", { className: "tx-tag" }, tx.signal),
             ),
-            e("div", { className: "tx-date" }, tx.category + " · " + tx.date)
+            e("div", { className: "tx-date" }, tx.category + " · " + tx.date),
           ),
           e(
             "div",
             {
               className: "tx-amount " + (tx.amount >= 0 ? "pos" : "neg"),
             },
-            (tx.amount >= 0 ? "+" : "") + formatEUR(tx.amount)
-          )
+            (tx.amount >= 0 ? "+" : "") + formatEUR(tx.amount),
+          ),
         );
-      })
+      }),
     ),
     !dimmed &&
       e(
         "article",
         { className: "insight-card" },
-        e("h2", { className: "insight-title" }, "Something seems to be changing."),
+        e(
+          "h2",
+          { className: "insight-title" },
+          "Something seems to be changing.",
+        ),
         e(
           "p",
           { className: "insight-body" },
-          "KBC noticed a pattern across your recent activity."
+          "KBC noticed a pattern across your recent activity.",
         ),
         e(
           "button",
           { className: "primary-cta", type: "button", onClick: onAnalyze },
-          "Connect the signals"
+          "Connect the signals",
         ),
-        e("p", { className: "insight-hint" }, "See how KBC arrived at this")
-      )
+        e("p", { className: "insight-hint" }, "See how KBC arrived at this"),
+      ),
   );
 }
 
@@ -775,11 +908,15 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
     "section",
     { className: "scale-section", id: "scale" },
     e("p", { className: "scale-kicker" }, "Same engine. Different situations."),
-    e("h2", { className: "scale-title" }, "One engine. Millions of situations."),
+    e(
+      "h2",
+      { className: "scale-title" },
+      "One engine. Millions of situations.",
+    ),
     e(
       "p",
       { className: "scale-sub" },
-      "2.3M customers. One capability library. Different situations."
+      "2.3M customers. One capability library. Different situations.",
     ),
     e(
       "div",
@@ -797,11 +934,11 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
             "div",
             { className: "arch-step" },
             e("div", { className: "arch-step-title" }, step[0]),
-            e("div", { className: "arch-step-body" }, step[1])
+            e("div", { className: "arch-step-body" }, step[1]),
           ),
-          i < arr.length - 1 && e("div", { className: "arch-step-arrow" }, "↓")
+          i < arr.length - 1 && e("div", { className: "arch-step-arrow" }, "↓"),
         );
-      })
+      }),
     ),
     e(
       "div",
@@ -817,14 +954,18 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
               "persona-card" +
               (interactive ? " is-interactive" : "") +
               (activePreview === p.id ? " active" : ""),
-            onClick: interactive ? function () { onSelect(p.id); } : undefined,
+            onClick: interactive
+              ? function () {
+                  onSelect(p.id);
+                }
+              : undefined,
           },
           e("div", { className: "persona-avatar" }, p.initial),
           e("div", { className: "persona-name" }, p.name),
           e("div", { className: "persona-mode" }, p.mode),
-          e("div", { className: "persona-hint" }, p.modules.join(" · "))
+          e("div", { className: "persona-hint" }, p.modules.join(" · ")),
         );
-      })
+      }),
     ),
     activePreview === "noah" &&
       noah &&
@@ -836,9 +977,13 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
         e(
           "p",
           { className: "persona-preview-line" },
-          "A new salary changes more than your balance."
+          "A new salary changes more than your balance.",
         ),
-        e("div", { className: "modal-signals-label" }, "Prioritised capabilities"),
+        e(
+          "div",
+          { className: "modal-signals-label" },
+          "Prioritised capabilities",
+        ),
         e(
           "ul",
           { className: "compiler-list static" },
@@ -847,20 +992,20 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
               "li",
               { key: label, className: "compiler-item visible" },
               e("span", { className: "evidence-check" }, "✓"),
-              label
+              label,
             );
-          })
+          }),
         ),
         e(
           "p",
           { className: "persona-preview-tagline" },
-          "Same engine. Different situation."
+          "Same engine. Different situation.",
         ),
         e(
           "button",
           { className: "ghost-btn", type: "button", onClick: onBack },
-          "Back to Emma"
-        )
+          "Back to account",
+        ),
       ),
     e(
       "div",
@@ -871,16 +1016,16 @@ function PersonaStrip({ personas, activePreview, onSelect, onBack }) {
       e(
         "p",
         null,
-        "The right KBC experience for what is happening in your life right now."
-      )
-    )
+        "The right KBC experience for what is happening in your life right now.",
+      ),
+    ),
   );
 }
 
 /* ── App ── */
 function App() {
   const data = window.KBC_DEMO;
-  const emma = data.emma;
+  const customer = data.customer;
   const [stage, setStage] = useState("normal");
   const [rentPaused, setRentPaused] = useState(false);
   const [rentReviewing, setRentReviewing] = useState(false);
@@ -909,27 +1054,20 @@ function App() {
     setConfirmLocked(false);
   }, []);
 
-  const skipToMoving = useCallback(function () {
-    setHypothesis(window.analyzeEmma());
-    setShowTrustModal(false);
-    setShowSignalsModal(false);
-    setShowQuietMode(false);
-    setExiting(false);
-    setExitNotice(false);
-    setRentReviewing(false);
-    setConfirmLocked(false);
-    setStage("moving");
-  }, []);
-
   const startAnalyze = function () {
     if (showQuietMode) return;
-    setHypothesis(window.analyzeEmma());
+    window
+      .analyzeCustomerWithModel()
+      .then(setHypothesis)
+      .catch(function () {
+        setHypothesis(window.analyzeCustomer());
+      });
     setStage("analyzing");
   };
 
   useEffect(
     function () {
-      if (stage !== "analyzing") return;
+      if (stage !== "analyzing" || !hypothesis) return;
       const t = setTimeout(function () {
         setStage("confirmation");
       }, 1900);
@@ -937,7 +1075,7 @@ function App() {
         clearTimeout(t);
       };
     },
-    [stage]
+    [stage, hypothesis],
   );
 
   useEffect(
@@ -951,7 +1089,7 @@ function App() {
         clearTimeout(t);
       };
     },
-    [stage]
+    [stage],
   );
 
   useEffect(
@@ -965,7 +1103,7 @@ function App() {
         clearTimeout(t);
       };
     },
-    [exitNotice]
+    [exitNotice],
   );
 
   const confirmYes = function () {
@@ -1000,8 +1138,8 @@ function App() {
       !hideMain &&
         !isMoving &&
         e(AccountOverview, {
-          customer: emma,
-          transactions: emma.transactions,
+          customer: customer,
+          transactions: customer.transactions,
           dimmed: isOverlay,
           exiting: exiting,
           onAnalyze: startAnalyze,
@@ -1038,14 +1176,16 @@ function App() {
           },
         }),
       exitNotice && e("div", { className: "overlay-dim" }),
-      exitNotice &&
-        e("div", { className: "overlay" }, e(ExitNotice, null)),
+      exitNotice && e("div", { className: "overlay" }, e(ExitNotice, null)),
       isOverlay && e("div", { className: "overlay-dim" }),
       stage === "analyzing" &&
         e(
           "div",
           { className: "overlay" },
-          e(SignalAnalysis, { signals: data.analysisSignals })
+          e(SignalAnalysis, {
+            signals: data.analysisSignals,
+            hypothesis: hypothesis,
+          }),
         ),
       stage === "confirmation" &&
         hypothesis &&
@@ -1059,15 +1199,15 @@ function App() {
             onWhy: function () {
               setShowTrustModal(true);
             },
-          })
+          }),
         ),
       stage === "compiling" &&
         hypothesis &&
         e(
           "div",
           { className: "overlay" },
-          e(CapabilityCompiler, { hypothesis: hypothesis })
-        )
+          e(CapabilityCompiler, { hypothesis: hypothesis }),
+        ),
     ),
     !showQuietMode &&
       !exitNotice &&
@@ -1096,7 +1236,6 @@ function App() {
       "div",
       { className: "demo-bar", "aria-label": "Demo controls" },
       e("button", { type: "button", onClick: reset }, "Reset demo"),
-      e("button", { type: "button", onClick: skipToMoving }, "Skip to Moving Mode"),
       e(
         "button",
         {
@@ -1109,9 +1248,9 @@ function App() {
             setStage("normal");
           },
         },
-        "Show quiet mode"
-      )
-    )
+        "Show quiet mode",
+      ),
+    ),
   );
 }
 
