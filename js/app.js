@@ -1008,8 +1008,12 @@ function App() {
 
   const startAnalyze = function () {
     if (showQuietMode) return;
-    setCustomerId("emma");
-    setHypothesis(window.analyzeEmma());
+    if (customerId === "noah") {
+      setHypothesis(window.analyzeNoah());
+    } else {
+      setCustomerId("emma");
+      setHypothesis(window.analyzeEmma());
+    }
     setStage("analyzing");
   };
 
@@ -1021,9 +1025,10 @@ function App() {
     setShowTrustModal(false);
     setShowSignalsModal(false);
     setExitNotice(false);
+    setExiting(false);
     setConfirmLocked(false);
-    setHypothesis(window.analyzeNoah());
-    setStage("analyzing");
+    setHypothesis(null);
+    setStage("normal");
   };
 
   useEffect(
@@ -1235,7 +1240,9 @@ function App() {
       { className: "demo-bar", "aria-label": "Demo controls" },
       e("button", { type: "button", onClick: reset }, "Reset demo"),
       e("button", { type: "button", onClick: skipToMoving }, "Skip to Moving Mode"),
-      e("button", { type: "button", onClick: startNoah }, "Explore Noah")
+      customerId === "noah"
+        ? e("button", { type: "button", onClick: backToEmma }, "Back to Emma")
+        : e("button", { type: "button", onClick: startNoah }, "Explore Noah")
     )
   );
 }
