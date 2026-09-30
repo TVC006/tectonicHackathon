@@ -2,9 +2,38 @@
 
 > From personalized banking to situational banking.
 
-Hackathon proof of concept — not a production banking app.
+Hackathon proof of concept for KBC: a **situational personalization engine** that detects meaningful life changes from customer signals, asks for confirmation, and temporarily reorganises existing banking capabilities around the current situation.
+
+Moving Mode (Emma) is the hero **example**. The product story is the **engine**.
+
+---
+
+## Concept
+
+```
+Signals
+  → Situation hypothesis
+  → Customer confirmation
+  → Is action useful?
+       ├─ Yes → Capability selection → Temporary experience
+       └─ No  → Quiet Mode
+```
+
+- **Signals** form a pattern (not a single transaction).
+- **Hypothesis, not certainty** — the customer remains the source of truth.
+- **Capabilities** come from a reusable library across domains (payments, cash, home, services, cards, …).
+- **Experiences are temporary** — not a permanently personalised dashboard.
+- **Quiet** is a valid engine outcome: knowing when not to act.
+
+Scale idea for 2.3M+ customers:
+
+**One engine · One capability library · Many situations · Different temporary experiences**
+
+---
 
 ## Run
+
+Requires [Node.js](https://nodejs.org/) (no `npm install`).
 
 ```bash
 node server.js
@@ -51,4 +80,57 @@ similarity = 1 - min(1, d)
 
 For a convincing scalability demo, prepare 6–10 customer records: three with similar housing/mobility patterns, three with salary/start-work patterns, and one or two unrelated records. Change amounts by 10–20% and dates by a few days. Explain that the local algebra groups the records first, so the AI is called once per distinct group rather than once per customer. When LM Studio is unavailable, the UI remains demonstrable through the local fallback.
 
-Demo controls (bottom-right): **Reset demo** · **Skip to Moving Mode**
+Demo controls (bottom-right): **Reset demo** · **Skip to Moving Mode** · **Explore Noah**
+
+---
+
+## Project structure
+
+```
+kbc-shift/
+├── index.html                 # Shell + script load order
+├── server.js                  # Static file server (port 3000)
+├── css/styles.css             # Design tokens + UI
+├── js/
+│   ├── app.js                 # React UI (createElement) + state machine
+│   └── lib/
+│       ├── demo-data.js       # Emma / Noah demo data
+│       ├── situation-engine.js# Situations + capability library + analyze*
+│       └── types.js           # Demo type notes
+└── vendor/                    # React 18 UMD bundles (local)
+```
+
+---
+
+## Stack
+
+| Layer   | Choice                             |
+| ------- | ---------------------------------- |
+| UI      | React 18 (`createElement`, no JSX) |
+| Styling | Vanilla CSS                        |
+| Logic   | Deterministic JS situation engine  |
+| Data    | Local demo data                    |
+| Server  | `node server.js`                   |
+
+**Out of scope for this PoC:** TypeScript, Tailwind, Framer Motion, npm runtime deps, backend, LLM, auth, real APIs.
+
+---
+
+## What this answers (KBC challenge)
+
+| Challenge theme                            | How SHIFT shows it                                      |
+| ------------------------------------------ | ------------------------------------------------------- |
+| Understand needs from signals              | Multi-signal pattern → situation hypothesis             |
+| Situation / behaviour / intent             | Moving, First job (+ Quiet when not useful)             |
+| Personalised, adapted experience           | Temporary mode after confirmation                       |
+| Across products / services                 | Capabilities from different domains, one selection step |
+| Scale to millions of customers             | One engine + reusable library + recombination           |
+| PoC of a new approach, not a loose feature | Engine-first story; Moving is one output                |
+
+---
+
+## Notes
+
+- Reset clears demo state (including paused rent / address).
+- Exit Moving Mode ends the temporary experience but keeps completed actions until Reset.
+- This is a **demo**, not production banking software.
