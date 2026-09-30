@@ -12,11 +12,11 @@ Hackathon proof of concept for KBC.
 
 KBC SHIFT is a situational personalization engine for banking. Instead of building one-off features or permanently personalized dashboards, SHIFT detects meaningful life changes from combinations of customer signals, proposes a situation hypothesis, and asks the customer to confirm. Only after confirmation does the engine select existing trusted KBC capabilities from a reusable library and temporarily reorganise the banking experience around what matters now.
 
-If action is not useful, the engine stays quiet — personalization does not mean constantly interrupting the customer.
+If action is not useful, the engine stays quiet - personalization does not mean constantly interrupting the customer.
 
-The hero demo follows Emma (Moving): rental deposit, IKEA, Brico and Cambio form a pattern → Moving at 91% confidence → customer confirms → Standing orders, Cashflow, Home setup and Moving day are selected → temporary Moving Mode with real actions (e.g. pause old rent). Noah (First job) and Quiet Mode show that the same engine can produce different outcomes — or no outcome — without building separate products for each life event.
+The hero demo follows Emma (Moving): rental deposit, IKEA, Brico and Cambio form a pattern → Moving at 91% confidence → customer confirms → Standing orders, Cashflow, Home setup and Moving day are selected → temporary Moving Mode with real actions (e.g. pause old rent). Noah (First job) and Quiet Mode show that the same engine can produce different outcomes - or no outcome - without building separate products for each life event.
 
-This scales to 2.3M+ customers through one engine, one capability library, and many situation combinations — not 2.3M custom experiences.
+This scales to 2.3M+ customers through one engine, one capability library, and many situation combinations - not 2.3M custom experiences.
 
 ---
 
