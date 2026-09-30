@@ -1,0 +1,10 @@
+{
+  "name": "kbc-shift",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KBC SHIFT — hackathon demo: the bank that changes before you ask",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
