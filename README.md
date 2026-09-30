@@ -37,8 +37,8 @@ This scales to 2.3M+ customers through one engine, one capability library, and m
 ```
 Signals
   → Situation hypothesis
-  → Customer confirmation
-  → Is action useful?
+    → Customer confirmation
+    → Is action useful?
        ├─ Yes → Select capabilities → Temporary experience
        └─ No  → Quiet Mode
 ```
@@ -64,22 +64,38 @@ node server.js
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Works offline for the demo (local React vendor + local data). No env vars, backend, database or API.
+Works offline with a local deterministic fallback. When LM Studio is running, situation analysis can use the local model via `POST /api/analyze-groups`.
+
+## LM Studio (optional)
+
+Start LM Studio's local server with a model loaded (default expected: `google/gemma-4-e4b`). The app calls `http://127.0.0.1:1234/v1/chat/completions`. Configure:
+
+```powershell
+$env:LM_STUDIO_URL = "http://127.0.0.1:1234/v1/chat/completions"
+$env:LM_STUDIO_MODEL = "google/gemma-4-e4b"
+node server.js
+```
+
+`POST /api/analyze-groups` accepts `{ "customers": [{ "id": "...", "transactions": [...] }] }`. The classifier is customer-agnostic: demo names are only example input.
+
+### Mathematical grouping model
+
+For every customer, the server builds a feature vector (totals, averages, counts, time span, normalized signal tokens). Two customers receive a weighted distance; similarity ≥ `0.48` places them in the same group. Only the group representative is sent to the model; results are cached by SHA-256 fingerprint and reused for group members. When LM Studio is unavailable, the UI stays demonstrable via local fallback.
 
 ---
 
 ## Jury demo (60–90 seconds)
 
-1. Emma’s account — signals on rental deposit, IKEA, Brico, Cambio  
-2. **See what we noticed** → Moving · 91%  
-3. **Are you moving?** → **Yes** (or **Not really** → Quiet)  
-4. Engine selects capabilities → **Moving Mode** (temporary)  
-5. **Pause payment** (and optionally update address)  
-6. Scroll to scale: Emma / Noah / Quiet — same engine, different outcomes  
+1. Emma’s account — signals on rental deposit, IKEA, Brico, Cambio
+2. **See what we noticed** → Moving · 91%
+3. **Are you moving?** → **Yes** (or **Not really** → Quiet)
+4. Engine selects capabilities → **Moving Mode** (temporary)
+5. **Pause payment** (and optionally update address)
+6. Scroll to scale: Emma / Noah / Quiet — same engine, different outcomes
 
 Optional: **Explore Noah** → his normal banking → **See what we noticed** → First Job Mode.
 
-Demo bar: **Reset demo** · **Skip to Moving Mode** · **Explore Noah** / **Back to Emma**
+Demo bar: **Reset demo** · **Skip to Moving Mode** · **Explore Noah** / **Back to account**
 
 ---
 
@@ -101,7 +117,7 @@ Demo bar: **Reset demo** · **Skip to Moving Mode** · **Explore Noah** / **Back
 ```
 kbc-shift/
 ├── index.html
-├── server.js              # Static server :3000
+├── server.js              # Static server :3000 + optional /api/analyze-groups
 ├── css/styles.css
 ├── js/app.js              # UI + demo state machine
 ├── js/lib/
@@ -111,8 +127,8 @@ kbc-shift/
 └── vendor/                # React 18 UMD (local)
 ```
 
-**Stack:** React 18 (`createElement`), vanilla CSS, deterministic JS engine, Node static server.  
-**Not in scope:** TypeScript, Tailwind, backend, LLM, auth, real banking APIs.
+**Stack:** React 18 (`createElement`), vanilla CSS, deterministic JS engine + optional LM Studio, Node static server.
+**Not in scope:** TypeScript, Tailwind, Framer Motion, npm runtime deps, auth, real banking APIs.
 
 ---
 

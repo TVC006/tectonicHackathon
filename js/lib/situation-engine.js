@@ -110,7 +110,7 @@ const SITUATIONS = {
   },
 };
 
-const EMMA_SIGNAL_HINTS = [
+const DEFAULT_SIGNAL_HINTS = [
   "rental deposit",
   "housing",
   "ikea",
@@ -155,7 +155,6 @@ function resolveCapabilities(ids) {
     })
     .filter(Boolean);
 }
-
 function buildHypothesis(situation) {
   return {
     situation: situation.id,
@@ -169,10 +168,6 @@ function buildHypothesis(situation) {
   };
 }
 
-/**
- * Deterministic analyzer.
- * Returns a situation hypothesis from a finite library.
- */
 function analyzeSituation(signals) {
   var normalized = normalizeSignals(signals);
   var joined = normalized.join(" ");
@@ -180,7 +175,7 @@ function analyzeSituation(signals) {
   var looksLikeFirstJob = NOAH_SIGNAL_HINTS.some(function (hint) {
     return joined.indexOf(hint) !== -1;
   });
-  var looksLikeMoving = EMMA_SIGNAL_HINTS.some(function (hint) {
+  var looksLikeMoving = DEFAULT_SIGNAL_HINTS.some(function (hint) {
     return joined.indexOf(hint) !== -1;
   });
 
@@ -196,14 +191,37 @@ function analyzeSituation(signals) {
   return buildHypothesis(SITUATIONS[situationKey]);
 }
 
-/** Compatibility wrapper used by the existing Emma hero demo. */
-function analyzeEmma() {
+function analyzeCustomer() {
   var demo = typeof window !== "undefined" ? window.KBC_DEMO : null;
   var signals =
     (demo && demo.analysisSignals) ||
-    (demo && demo.emma && demo.emma.transactions) ||
-    EMMA_SIGNAL_HINTS;
+    (demo && demo.customer && demo.customer.transactions) ||
+    DEFAULT_SIGNAL_HINTS;
   return analyzeSituation(signals);
+}
+
+function analyzeCustomerWithModel(customerOverride) {
+  var demo = typeof window !== "undefined" ? window.KBC_DEMO : null;
+  var customer = customerOverride || {
+    id: demo && demo.customer ? demo.customer.name : "demo-customer",
+    transactions: (demo && demo.customer && demo.customer.transactions) || [],
+  };
+  return fetch("/api/analyze-groups", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ customers: [customer] }),
+  })
+    .then(function (response) {
+      if (!response.ok) throw new Error("Group analysis unavailable");
+      return response.json();
+    })
+    .then(function (payload) {
+      var result =
+        payload.groups && payload.groups[0] && payload.groups[0].analysis;
+      if (!result) throw new Error("No group analysis returned");
+      result.capabilityDetails = resolveCapabilities(result.capabilities || []);
+      return result;
+    });
 }
 
 /** Shortened second path — same engine, First Job. */
@@ -234,7 +252,8 @@ if (typeof window !== "undefined") {
   window.CAPABILITIES = CAPABILITIES;
   window.SITUATIONS = SITUATIONS;
   window.analyzeSituation = analyzeSituation;
-  window.analyzeEmma = analyzeEmma;
+  window.analyzeCustomer = analyzeCustomer;
+  window.analyzeCustomerWithModel = analyzeCustomerWithModel;
   window.analyzeNoah = analyzeNoah;
   window.getSituation = getSituation;
   window.getCapability = getCapability;
@@ -245,7 +264,8 @@ if (typeof module !== "undefined" && module.exports) {
     CAPABILITIES: CAPABILITIES,
     SITUATIONS: SITUATIONS,
     analyzeSituation: analyzeSituation,
-    analyzeEmma: analyzeEmma,
+    analyzeCustomer: analyzeCustomer,
+    analyzeCustomerWithModel: analyzeCustomerWithModel,
     analyzeNoah: analyzeNoah,
     getSituation: getSituation,
     getCapability: getCapability,
